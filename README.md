@@ -149,24 +149,25 @@ La aplicación estará disponible en `http://127.0.0.1:5000/`.
 
 ## 🖥️ Uso
 
-Una vez que la aplicación esté funcionando:
+* Una vez que la aplicación esté funcionando:
 
-Página Principal: Accede a la interfaz inicial de la biblioteca.
+* **Página Principal:** Accede a la interfaz inicial de la biblioteca.
 
-Panel de Administración (/admin/): Central para gestionar todas las funcionalidades del sistema (usuarios, libros, préstamos, exportaciones, estadísticas).
+* **Panel de Administración** (`/admin/`): Central para gestionar todas las funcionalidades del sistema (usuarios, libros, préstamos, exportaciones, estadísticas).
 
-Gestión de Usuarios (/usuarios/): Añade, edita, elimina y consulta la lista de socios.
+* **Gestión de Usuarios** (`/usuarios/`): Añade, edita, elimina y consulta la lista de socios.
 
-Gestión de Libros (/libros/): Administra el catálogo completo de la biblioteca.
+* **Gestión de Libros** (`/libros/`): Administra el catálogo completo de la biblioteca.
 
-Gestión de Préstamos (/prestamos/): Registra préstamos y devoluciones de libros.
+* **Gestión de Préstamos** (`/prestamos/`): Registra préstamos y devoluciones de libros.
 
-Estadísticas (/admin/estadisticas_anuales_trimestrales): Visualiza métricas clave de uso y tendencias de lectura.
+* **Estadísticas** (`/admin/estadisticas_anuales_trimestrales`): Visualiza métricas clave de uso y tendencias de lectura.
 
-Opciones de Exportación (/admin/export-options): Genera informes en PDF o exporta todos los datos a Excel.
+* **Opciones de Exportación** (`/admin/export-options`): Genera informes en PDF o exporta todos los datos a Excel.
 
-📁 Estructura del Proyecto
-Aquí te dejo una visión general de la estructura de carpetas y archivos, mi tesoro. Asegúrate de que tu proyecto la sigue, o ajústala si es diferente:
+## 📁 Estructura del Proyecto
+
+Aquí te dejo una visión general de la estructura de carpetas y archivos:
 
 ```
 tu_proyecto_biblioteca/
@@ -217,7 +218,8 @@ tu_proyecto_biblioteca/
 └── biblioteca.db          # Archivo de base de datos (IGNORADO por Git)
 ```
 
-🤝 Contribución
+## 🤝 Contribución
+
 ¡Todas las contribuciones son bienvenidas! Si deseas mejorar este proyecto o añadir nuevas funcionalidades, por favor:
 
 Haz un "fork" de este repositorio.
