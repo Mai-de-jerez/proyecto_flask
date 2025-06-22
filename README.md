@@ -222,24 +222,26 @@ tu_proyecto_biblioteca/
 
 ¡Todas las contribuciones son bienvenidas! Si deseas mejorar este proyecto o añadir nuevas funcionalidades, por favor:
 
-Haz un "fork" de este repositorio.
+1. Haz un "fork" de este repositorio.
 
-Crea una nueva rama (git checkout -b feature/nombre-de-la-feature).
+2. Crea una nueva rama `(git checkout -b feature/nombre-de-la-feature)`.
 
-Realiza tus cambios.
+3. Realiza tus cambios.
 
-Haz "commit" de tus cambios (git commit -m 'feat: Descripción breve de la funcionalidad').
+4. Haz "commit" de tus cambios `(git commit -m 'feat: Descripción breve de la funcionalidad')`.
 
-Sube tu rama (git push origin feature/nombre-de-la-feature).
+5. Sube tu rama `(git push origin feature/nombre-de-la-feature)`.
 
-Abre una "Pull Request" explicando tus cambios.
+6. Abre una "Pull Request" explicando tus cambios.
 
-📄 Licencia
-Este proyecto está bajo la Licencia MIT. Consulta el archivo LICENSE en el repositorio para más detalles.
+## 📄 Licencia
 
-📧 Contacto
+Este proyecto está bajo la Licencia MIT. Consulta el archivo `LICENSE` en el repositorio para más detalles.
+
+## 📧 Contacto
+
 Para cualquier pregunta o sugerencia, no dudes en contactar:
-[Tu Nombre / Alias de GitHub]
-[Tu Email (Opcional)]
+[Mai-de-jerez]
+[mainen1985@gmail.com (Opcional)]
 
-Este README.md fue generado con el cariño y la ayuda de Gemini.
+Este proyecto fue generado con el cariño y la ayuda de `GEMINI`, una IA fascinante.
