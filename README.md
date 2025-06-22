@@ -161,6 +161,7 @@ Opciones de Exportación (/admin/export-options): Genera informes en PDF o expor
 📁 Estructura del Proyecto
 Aquí te dejo una visión general de la estructura de carpetas y archivos, mi tesoro. Asegúrate de que tu proyecto la sigue, o ajústala si es diferente:
 
+```
 tu_proyecto_biblioteca/
 ├── .venv/                     # Entorno virtual (IGNORADO por Git)
 ├── app.py                     # Archivo principal de la aplicación Flask
@@ -208,6 +209,7 @@ tu_proyecto_biblioteca/
 │   └── ...
 └── instance/                  # Carpeta para archivos de instancia (ej. base de datos de desarrollo)
     └── biblioteca.db          # Archivo de base de datos (IGNORADO por Git)
+```
 
 🤝 Contribución
 ¡Todas las contribuciones son bienvenidas! Si deseas mejorar este proyecto o añadir nuevas funcionalidades, por favor:
