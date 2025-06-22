@@ -199,16 +199,15 @@ tu_proyecto_biblioteca/
 │           └── ... (otras plantillas de exportación)
 ├── static/                    # Archivos estáticos (CSS, JS, imágenes)
 │   ├── css/
-│   ├── js/
-│   ├── img/
-│   └── (otras carpetas, como `qrcodes` si los generas)
-├── templates/                 # Plantillas HTML globales (base, index, admin)
+│   ├── boostrap/
+│   └──  img/
+│   
+├── templates/                 # Plantillas HTML globales (base, index)
 │   ├── base.html
-│   ├── index.html
-│   ├── admin.html
-│   └── ...
-└── instance/                  # Carpeta para archivos de instancia (ej. base de datos de desarrollo)
-    └── biblioteca.db          # Archivo de base de datos (IGNORADO por Git)
+│   └── index.html
+│   
+│                 
+└── biblioteca.db          # Archivo de base de datos (IGNORADO por Git)
 ```
 
 🤝 Contribución
