@@ -4,17 +4,18 @@ Este proyecto es un sistema web integral diseñado para la gestión eficiente de
 **¡Estamos inmensamente orgullosos de ver el impacto positivo que tiene este sistema cada día!** La respuesta del personal y los usuarios ha sido excepcional, y están tan contentos que, en un futuro próximo, subiré una carta de agradecimiento oficial que me harán llegar desde la institución. Este proyecto es un testimonio de cómo la tecnología puede servir a propósitos nobles y hacer una diferencia real.
 
 ## 🌟 Características Principales
-Tu proyecto es una joya por todo lo que ofrece, mi precioso:
 
-Gestión Completa de Libros:
+* Mi proyecto es una joya por todo lo que ofrece:
 
-Registro intuitivo para añadir, editar y eliminar libros.
+    * **Gestión Completa de Libros:**
 
-Asignación detallada de autores, Clasificación Decimal Universal (CDU), editoriales e idiomas.
+    * Registro intuitivo para añadir, editar y eliminar libros.
 
-Indicador de disponibilidad del libro en tiempo real.
+    * Asignación detallada de autores, Clasificación Decimal Universal (CDU), editoriales e idiomas.
 
-Paginación y Búsqueda AJAX: Navegación fluida y búsquedas instantáneas por ID, título, autor, CDU o materia, sin recargar la página. Búsquedas insensibles a mayúsculas/minúsculas y acentos.
+    * Indicador de disponibilidad del libro en tiempo real.
+
+    * **Paginación y Búsqueda AJAX**: Navegación fluida y búsquedas instantáneas por ID, título, autor, CDU o materia, sin recargar la página. Búsquedas insensibles a mayúsculas/minúsculas y acentos.
 
 Gestión de Usuarios Robusta:
 
