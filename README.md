@@ -95,14 +95,14 @@ Este proyecto es un sistema web integral diseñado para la gestión eficiente de
 
 Sigue estos pasos para configurar y ejecutar el proyecto en tu entorno local:
 
-1. Clona el repositorio:
+1. **Clona el repositorio:**
 
 ```
 git clone https://github.com/Mai-de-jerez/proyecto_flask
 cd proyecto_flask
 ```
 
-2. Crea y activa un entorno virtual (muy recomendado):
+2. **Crea y activa un entorno virtual (muy recomendado):**
 
 ```
 python -m venv .venv
@@ -117,31 +117,38 @@ python -m venv .venv
 source ./.venv/bin/activate
 ```
 
-3. Instala las dependencias del proyecto:
+3. **Instala las dependencias del proyecto:**
 
 ```
 pip install -r requirements.txt
 ```
 
-4. Inicializa la base de datos SQLite:
+4. **Inicializa la base de datos SQLite:**
 
-Asegúrate de que tienes un script para crear la base de datos y las tablas (por ejemplo, database.py o init_db.py con una función inicializar_db()). Ejecútalo:
+Asegúrate de que tienes un script para crear la base de datos y las tablas (por ejemplo, `database.py` o `init_db.py` con una función `inicializar_db()`). Ejecútalo:
 
+```
 python -c "from database import inicializar_db; inicializar_db()" # O tu forma de inicializar
+```
 
-Si tu app.py llama a inicializar_db() dentro de un app.app_context() (como el que te he provisto), la base de datos se inicializará la primera vez que inicies la aplicación.
+Si tu `app.py` llama a `inicializar_db()` dentro de un `app.app_context()` (como el que te he provisto), la base de datos se inicializará la primera vez que inicies la aplicación.
 
-Ejecuta la aplicación Flask:
-
+5. **Ejecuta la aplicación Flask:**
+   
+```
 flask run
+```
 
-Si tu app.py tiene un bloque if __name__ == '__main__': app.run(...), también puedes ejecutarlo directamente:
+Si tu `app.py` tiene un bloque `if __name__ == '__main__': app.run(...)`, también puedes ejecutarlo directamente:
 
+```
 python app.py
+```
 
-La aplicación estará disponible en http://127.0.0.1:5000/.
+La aplicación estará disponible en `http://127.0.0.1:5000/`.
 
-🖥️ Uso
+## 🖥️ Uso
+
 Una vez que la aplicación esté funcionando:
 
 Página Principal: Accede a la interfaz inicial de la biblioteca.
