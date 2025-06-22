@@ -67,51 +67,64 @@ Este proyecto es un sistema web integral diseñado para la gestión eficiente de
 
    * [Python 3.13](https://www.python.org/)
 
-Flask (Microframework web)
+   * [Flask](https://flask.palletsprojects.com/) (Microframework web)
 
-SQLite (Base de datos embebida)
+   * [SQLite](https://www.sqlite.org/) (Base de datos embebida)
 
-python-dotenv (Para gestión segura de variables de entorno)
+   * [python-dotenv](https://pypi.org/project/python-dotenv/)(Para gestión segura de variables de entorno)
 
-pandas (Para manipulación de datos y exportación a Excel en caso de que se necesiten importar datos ya existentes de otra base)
+   * [Pandas](https://pandas.pydata.org/) 
 
-xlsxwriter (Para la creación de archivos Excel)
+   * [xlsxwriter](https://xlsxwriter.readthedocs.io/) (Para la creación de archivos Excel)
 
-ReportLab (Para la generación de documentos PDF)
+   * [ReportLab](https://docs.reportlab.com/) (Para la generación de documentos PDF)
 
-Frontend:
+* **Frontend:**
 
-HTML5
+   * [HTML5](https://developer.mozilla.org/es/docs/Web/HTML)
 
-CSS3
+   * [CSS3](https://developer.mozilla.org/es/docs/Web/CSS)
 
-JavaScript (Con peticiones Fetch/AJAX para interactividad)
+   * [JavaScript](https://developer.mozilla.org/es/docs/Web/JavaScript) (Con peticiones Fetch/AJAX para interactividad)
 
-Bootstrap 5 (Framework CSS para diseño responsivo)
+   * [Bootstrap 5](https://getbootstrap.com/) (Framework CSS para diseño responsivo)
 
-Jinja2 (Motor de plantillas de Flask)
+   * [Jinja2](https://jinja.palletsprojects.com/en/stable/) (Motor de plantillas de Flask)
 
-🚀 Instalación y Puesta en Marcha
+## 🚀 Instalación y Puesta en Marcha
+
 Sigue estos pasos para configurar y ejecutar el proyecto en tu entorno local:
 
-Clona el repositorio:
+1. Clona el repositorio:
 
+```
 git clone <URL_DE_TU_REPOSITORIO>
 cd <nombre_de_tu_repositorio>
+```
 
-Crea y activa un entorno virtual (muy recomendado):
+2. Crea y activa un entorno virtual (muy recomendado):
 
+```
 python -m venv .venv
+```
+
 # En Windows:
+```
 .\.venv\Scripts\activate
+```
 # En macOS/Linux:
+```
 source ./.venv/bin/activate
+```
 
-Instala las dependencias del proyecto:
+3. Instala las dependencias del proyecto:
 
+```
 pip install -r requirements.txt
+```
 
-Inicializa la base de datos SQLite:
+4. Inicializa la base de datos SQLite:
+
 Asegúrate de que tienes un script para crear la base de datos y las tablas (por ejemplo, database.py o init_db.py con una función inicializar_db()). Ejecútalo:
 
 python -c "from database import inicializar_db; inicializar_db()" # O tu forma de inicializar
