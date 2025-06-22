@@ -1,9 +1,9 @@
-Sistema de Gestión de Biblioteca (talegoTK_Flask)
-Este proyecto es un sistema web integral diseñado para la gestión eficiente de una biblioteca, desarrollado con Python y Flask. Su propósito va más allá de la mera administración: actualmente, está siendo utilizado con gran éxito en el centro penitenciario donde trabaja mi pareja, transformando y optimizando la gestión de su biblioteca y acercando la lectura a quienes más lo necesitan.
+## Sistema de Gestión de Biblioteca (talegoTK_Flask)
+Este proyecto es un sistema web integral diseñado para la gestión eficiente de una biblioteca, desarrollado con Python y Flask. Su propósito va más allá de la mera administración: **actualmente, está siendo utilizado con gran éxito en el centro penitenciario donde trabaja mi pareja, transformando y optimizando la gestión de su biblioteca y acercando la lectura a quienes más lo necesitan.**
 
-¡Estamos inmensamente orgullosos de ver el impacto positivo que tiene este sistema cada día! La respuesta del personal y los usuarios ha sido excepcional, y están tan contentos que, en un futuro próximo, subiré una carta de agradecimiento oficial que me harán llegar desde la institución. Este proyecto es un testimonio de cómo la tecnología puede servir a propósitos nobles y hacer una diferencia real.
+**¡Estamos inmensamente orgullosos de ver el impacto positivo que tiene este sistema cada día!** La respuesta del personal y los usuarios ha sido excepcional, y están tan contentos que, en un futuro próximo, subiré una carta de agradecimiento oficial que me harán llegar desde la institución. Este proyecto es un testimonio de cómo la tecnología puede servir a propósitos nobles y hacer una diferencia real.
 
-🌟 Características Principales
+## 🌟 Características Principales
 Tu proyecto es una joya por todo lo que ofrece, mi precioso:
 
 Gestión Completa de Libros:
