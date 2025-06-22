@@ -15,37 +15,37 @@ Este proyecto es un sistema web integral diseñado para la gestión eficiente de
 
     * Indicador de disponibilidad del libro en tiempo real.
 
-    * **Paginación y Búsqueda AJAX**: Navegación fluida y búsquedas instantáneas por ID, título, autor, CDU o materia, sin recargar la página. Búsquedas insensibles a mayúsculas/minúsculas y acentos.
+    * **Paginación y Búsqueda AJAX**: Navegación fluida y búsquedas instantáneas por ID, título, autor, CDU o materia, sin recargar la página. Búsquedas insensibles a      mayúsculas/minúsculas y acentos.
 
-Gestión de Usuarios Robusta:
+* **Gestión de Usuarios Robusta:**
 
-Control total sobre el registro, edición y eliminación de usuarios (socios).
+   * Control total sobre el registro, edición y eliminación de usuarios (socios).
 
-Asociación a módulos educativos y categorización por género.
+   * Asociación a módulos educativos y categorización por género.
 
-Paginación y Búsqueda AJAX: Listados eficientes y búsquedas rápidas por ID, nombre, apellidos o módulo.
+   * **Paginación y Búsqueda AJAX:** Listados eficientes y búsquedas rápidas por ID, nombre, apellidos o módulo.
+   
+   * **Control de Préstamos Activos:** Impide la eliminación de usuarios que aún tienen libros prestados, garantizando la integridad de los datos.
 
-Control de Préstamos Activos: Impide la eliminación de usuarios que aún tienen libros prestados, garantizando la integridad de los datos.
+* **Gestión de Préstamos y Devoluciones:**
 
-Gestión de Préstamos y Devoluciones:
+   * Registro sencillo de cada préstamo y su posterior devolución, con seguimiento de fechas.
 
-Registro sencillo de cada préstamo y su posterior devolución, con seguimiento de fechas.
+   * Historial completo de todas las transacciones de préstamo.
 
-Historial completo de todas las transacciones de préstamo.
+* **Estadísticas Anuales y Trimestrales Avanzadas:**
 
-Estadísticas Anuales y Trimestrales Avanzadas:
+   * Generación de informes de uso de la biblioteca desglosados por trimestre del año actual.
 
-Generación de informes de uso de la biblioteca desglosados por trimestre del año actual.
+   * **Manejo Inteligente de Empates**: Identifica y muestra todos los libros, autores y módulos empatados en las posiciones más destacadas (ej. más leídos, con más préstamos), presentándolos de forma clara en líneas separadas.
 
-Manejo Inteligente de Empates: Identifica y muestra todos los libros, autores y módulos empatados en las posiciones más destacadas (ej. más leídos, con más préstamos), presentándolos de forma clara en líneas separadas.
+   * **Perfil del Lector por Género**: Si hay un empate entre varios géneros en la categoría de "más lectores", el sistema indica "Indiferente" para reflejar la diversidad.
 
-Perfil del Lector por Género: Si hay un empate entre varios géneros en la categoría de "más lectores", el sistema indica "Indiferente" para reflejar la diversidad.
+* **Creación Dinámica de Datos Maestros:**
 
-Creación Dinámica de Datos Maestros:
+   * Los módulos, autores, editoriales, categorías CDU e idiomas se crean automáticamente en la base de datos si no existen al añadir un libro o usuario.
 
-Los módulos, autores, editoriales, categorías CDU e idiomas se crean automáticamente en la base de datos si no existen al añadir un libro o usuario.
-
-Búsquedas Inteligentes:
+* **Búsquedas Inteligentes:**
 
 Funcionalidades de búsqueda optimizadas, insensibles a mayúsculas/minúsculas y a tildes (acentos), facilitando la localización de información.
 
