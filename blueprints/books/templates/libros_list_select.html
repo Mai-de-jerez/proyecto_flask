@@ -1,0 +1,242 @@
+{# libros_list_select.html #}
+{% extends 'base.html' %}
+{% block title %}Seleccionar Libro{% endblock %}
+{% block content %}
+<div class="container-fluid mt-3 mb-5">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <form class="d-flex" id="search-form" action="{{ url_for('books.listar_libros_select') }}" method="GET">
+            <input class="form-control me-2 search-input" type="search" placeholder="Buscar libros..." aria-label="Search" name="q" id="search-input" value="{{ q }}">
+            <button class="btn btn-outline-secondary search-button" type="button" id="show-all-button">Mostrar todos</button>
+            <input type="hidden" name="select_mode" value="true">
+        </form>
+
+        {# Este botón "Volver" también debe fusionar los parámetros existentes #}
+        <button type="button" class="btn btn-info" id="btn_volver_formulario_prestamo">
+            <i class="fas fa-arrow-left"></i> Volver al Formulario de Préstamo
+        </button>
+    </div>
+    <div class="card shadow-sm mb-7">
+        <div class="card-header bg-dark text-white text-center fw-bold fs-5">
+            Libros Disponibles para Préstamo
+        </div>
+        <div class="card-body">
+            <div class="table-responsive">
+                <table class="table table-striped table-hover" id="librosTable">
+                    <thead>
+                        <tr>
+                            <th scope="col">NumReg</th>
+                            <th scope="col">Título</th>
+                            <th scope="col">Autor Principal</th>
+                            <th scope="col">CDU</th>
+                            <th scope="col">Materia</th>
+                            <th scope="col">LetTítulo</th>
+                            <th scope="col">LetAutor</th>
+                            <th scope="col">Disponible</th>
+                            <th scope="col"></th>
+                        </tr>
+                    </thead>
+                    <tbody id="libros-table-body" class="small">
+                        {% include '_libros_select_table_rows.html' %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+    <nav aria-label="Navegación de libros" class="mt-4">
+        <ul class="pagination justify-content-center" id="pagination-controls">
+           {% include '_pagination_controls_books.html' %}
+        </ul>
+    </nav>
+
+    <div class="mt-4 text-center">
+        <button id="seleccionar_libro_btn" class="btn btn-success btn-lg" disabled>
+            <i class="fas fa-check-circle"></i> Seleccionar Libro
+        </button>
+    </div>
+</div>
+
+{% endblock %}
+
+{% block scripts %}
+{{ super() }}
+
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // CRÍTICO: Capturamos TODOS los parámetros de la URL al cargar la página.
+        // Esto incluirá 'q', 'page', 'id_usuario_seleccionado', 'fecha_prestamo', etc.
+        let currentUrlParams = new URLSearchParams(window.location.search);
+
+        // Referencias a los elementos del DOM
+        const searchInput = document.getElementById('search-input');
+        const showAllButton = document.getElementById('show-all-button');
+        const librosTableBody = document.getElementById('libros-table-body');
+        const seleccionarLibroBtn = document.getElementById('seleccionar_libro_btn');
+        const btnVolverFormulario = document.getElementById('btn_volver_formulario_prestamo');
+        const paginationControls = document.getElementById('pagination-controls');
+        const searchForm = document.getElementById('search-form');
+
+        let selectedBookId = null;
+        let selectedBookTitle = null;
+        let activeRow = null;
+
+        // --- Función para adjuntar/re-adjuntar los event listeners a las filas ---
+        function attachRowClickHandlers() {
+            selectedBookId = null;
+            selectedBookTitle = null;
+            if (activeRow) {
+                activeRow.classList.remove('table-active');
+                activeRow = null;
+            }
+
+            if (seleccionarLibroBtn) {
+                seleccionarLibroBtn.disabled = true;
+                seleccionarLibroBtn.innerHTML = '<i class="fas fa-check-circle"></i> Seleccionar Libro';
+                seleccionarLibroBtn.classList.remove('btn-secondary');
+                seleccionarLibroBtn.classList.add('btn-success');
+            }
+
+            const bookRows = document.querySelectorAll('.book-row');
+            bookRows.forEach(row => {
+                const isAvailable = row.dataset.disponible === 'Si';
+
+                if (!isAvailable) {
+                    row.classList.add('non-selectable-row');
+                } else {
+                    row.classList.remove('non-selectable-row');
+                    row.addEventListener('click', function() {
+                        if (activeRow) {
+                            activeRow.classList.remove('table-active');
+                        }
+                        this.classList.add('table-active');
+                        activeRow = this;
+
+                        selectedBookId = this.dataset.id;
+                        selectedBookTitle = this.dataset.titulo;
+
+                        if (seleccionarLibroBtn) {
+                            seleccionarLibroBtn.disabled = false;
+                            seleccionarLibroBtn.innerHTML = '<i class="fas fa-check-circle"></i> Seleccionar Libro';
+                            seleccionarLibroBtn.classList.remove('btn-secondary');
+                            seleccionarLibroBtn.classList.add('btn-success');
+                        }
+                    });
+                }
+            });
+        }
+
+        // --- Lógica CLAVE para el botón "Seleccionar Libro" (fusiona parámetros) ---
+        if (seleccionarLibroBtn) {
+            seleccionarLibroBtn.addEventListener('click', function() {
+                if (selectedBookId) {
+                    // CRÍTICO: currentUrlParams ya contiene todos los parámetros que vinieron
+                    // desde el formulario de préstamo y que se mantuvieron por history.pushState.
+                    // Ahora solo le añadimos los específicos del libro.
+                    currentUrlParams.set('id_libro_seleccionado', selectedBookId);
+                    currentUrlParams.set('titulo_libro_seleccionado', selectedBookTitle);
+
+                    // Redirigir al formulario de préstamo con todos los parámetros
+                    // NO USAMOS _external=true si no es estrictamente necesario, para evitar problemas CORS/seguridad.
+                    const redirectUrl = "{{ url_for('loans.realizar_prestamo') }}?" + currentUrlParams.toString();
+                    window.location.href = redirectUrl;
+                }
+            });
+        }
+
+        // --- Lógica CLAVE para el botón "Volver al Formulario de Préstamo" (fusiona parámetros) ---
+        if (btnVolverFormulario) {
+            btnVolverFormulario.addEventListener('click', function() {
+                // CRÍTICO: currentUrlParams ya contiene todos los parámetros actuales de la URL
+                // Simplemente redirigimos con ellos.
+                // NO USAMOS _external=true si no es estrictamente necesario.
+                const redirectUrl = "{{ url_for('loans.realizar_prestamo') }}?" + currentUrlParams.toString();
+                window.location.href = redirectUrl;
+            });
+        }
+
+        let debounceTimeout;
+        const fetchLibrosForSelection = async (query = searchInput.value, page = 1) => {
+            clearTimeout(debounceTimeout);
+            debounceTimeout = setTimeout(async () => {
+                // CRÍTICO: Actualizamos 'q' y 'page' en nuestro objeto currentUrlParams.
+                currentUrlParams.set('q', query);
+                currentUrlParams.set('page', page);
+
+                // Construimos la URL AJAX usando TODOS los parámetros de currentUrlParams.
+                // Esto asegura que id_usuario_seleccionado y otros parámetros se incluyan.
+                const url = `{{ url_for('books.listar_libros_select_ajax') }}?${currentUrlParams.toString()}`;
+
+                try {
+                    const response = await fetch(url);
+                    if (!response.ok) {
+                        throw new Error(`Error HTTP! Estado: ${response.status}`);
+                    }
+                    const data = await response.json();
+
+                    librosTableBody.innerHTML = data.table_rows;
+                    paginationControls.innerHTML = data.pagination_html;
+
+                    // CRÍTICO: Actualizar la URL del navegador con history.pushState.
+                    // data.current_state_url ya viene con todos los parámetros del servidor,
+                    // incluyendo los que se persistieron.
+                    if (data.current_state_url && window.location.href !== data.current_state_url) {
+                        history.pushState({ path: data.current_state_url }, '', data.current_state_url);
+                        // Asegurarse de que currentUrlParams se actualice desde la URL real del navegador
+                        // Esto es importante si el servidor hizo alguna modificación a los parámetros (ej. limpiar q o page)
+                        currentUrlParams = new URLSearchParams(window.location.search);
+                    }
+
+                    attachRowClickHandlers(); // Re-adjuntar listeners a las nuevas filas
+                } catch (error) {
+                    console.error('Error fetching search results:', error);
+                    librosTableBody.innerHTML = '<tr><td colspan="9" class="text-center text-danger">Error al cargar los libros.</td></tr>';
+                    paginationControls.innerHTML = '';
+                }
+            }, 300);
+        };
+
+        // Event listeners para la búsqueda
+        if (searchInput) {
+            searchInput.addEventListener('input', function() {
+                fetchLibrosForSelection(searchInput.value, 1);
+            });
+        }
+        if (showAllButton) {
+            showAllButton.addEventListener('click', function() {
+                searchInput.value = ''; // Limpia el campo de búsqueda
+                fetchLibrosForSelection('', 1);
+            });
+        }
+
+        // Añadido listener para evitar el envío normal del formulario al presionar Enter
+        if (searchForm) {
+            searchForm.addEventListener('submit', function(event) {
+                event.preventDefault();
+                fetchLibrosForSelection(searchInput.value, 1);
+            });
+        }
+
+       // Añadido listener para manejar los clics de paginación vía AJAX
+        if (paginationControls) {
+            paginationControls.addEventListener('click', function(event) {
+                const pageLink = event.target.closest('a.page-link');
+
+                if (pageLink && !pageLink.parentElement.classList.contains('disabled')) {
+                    event.preventDefault();
+
+                    const url = new URL(pageLink.href);
+                    // CRÍTICO: Obtenemos la página del enlace de paginación
+                    const page = parseInt(url.searchParams.get('page')) || 1;
+                    // La consulta de búsqueda la tomamos del input actual
+                    const query = searchInput.value;
+
+                    fetchLibrosForSelection(query, page);
+                }
+            });
+        }
+
+        // Carga Inicial de Libros al cargar la página
+        // currentUrlParams ya tiene 'q' y 'page' si vinieron en la URL de carga inicial
+        fetchLibrosForSelection(currentUrlParams.get('q') || '', parseInt(currentUrlParams.get('page')) || 1);
+    });
+</script>
+{% endblock %}

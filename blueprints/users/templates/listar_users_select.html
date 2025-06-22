@@ -1,0 +1,236 @@
+{# listar_users_select.html #}
+{% extends "base.html" %}
+
+{% block title %}Seleccionar Usuario{% endblock %}
+
+{% block content %}
+<div class="container-fluid mt-3 mb-5">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <form class="d-flex" id="search-form-select-user">
+            <input class="form-control me-2 search-input" type="search" placeholder="Buscar usuarios por Núm. Socio, Nombre o Apellidos..." aria-label="Search" name="q" id="search-input-select-user" value="">
+            <button class="btn btn-outline-secondary search-button" type="button" id="show-all-button-select-user">Mostrar todos</button>
+        </form>
+
+        <button type="button" class="btn btn-info" id="cancelSelectUserBtn">
+            <i class="fas fa-arrow-left"></i> Volver al Formulario de Préstamo
+        </button>
+    </div>
+    <div class="card shadow-sm mb-7">
+        <div class="card-header bg-dark text-white text-center fw-bold fs-5">
+            Usuarios Disponibles
+        </div>
+        <div class="card-body">
+            <div class="table-responsive">
+                <table class="table table-striped table-hover" id="usersTable">
+                    <thead>
+                        <tr>
+                            <th scope="col">Núm. Socio</th>
+                            <th scope="col">Apellidos</th>
+                            <th scope="col">Nombre</th>
+                            <th scope="col">Módulo</th>
+                            <th scope="col">Género</th>
+                            <th scope="col">Préstamos Activos</th>
+                            <th scope="col"></th>
+                        </tr>
+                    </thead>
+                    <tbody id="users-table-body-select" class="small">
+                        {% include '_users_table_rows.html' %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <nav aria-label="Navegación de usuarios" class="mt-4">
+        <ul class="pagination justify-content-center" id="pagination-controls-select-user">
+            {% include '_pagination_controls_users.html' %}
+        </ul>
+    </nav>
+
+    <div class="mt-4 text-center">
+        <button type="button" class="btn btn-success btn-lg" id="selectUserBtn" disabled>
+            <i class="fas fa-check-circle"></i> Seleccionar Usuario
+        </button>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+{{ super() }}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const initialFlaskQuery = "{{ q | default('') }}";
+    const initialFlaskPage = parseInt("{{ page | default(1) }}");
+    const searchInput = document.getElementById('search-input-select-user');
+    const usersTableBody = document.getElementById('users-table-body-select');
+    const paginationControls = document.getElementById('pagination-controls-select-user');
+    const selectUserBtn = document.getElementById('selectUserBtn');
+    const cancelSelectUserBtn = document.getElementById('cancelSelectUserBtn');
+    const showAllButton = document.getElementById('show-all-button-select-user');
+    const searchForm = document.getElementById('search-form-select-user');
+
+    // Comprobación de existencia de elementos DOM (selectedUserIdInput ya no está aquí)
+    if (!searchInput || !usersTableBody || !paginationControls || !selectUserBtn || !cancelSelectUserBtn || !showAllButton || !searchForm) {
+        return;
+    }
+
+    let selectedUserId = null;
+    let selectedUserName = null;
+    let selectedUserApellidos = null;
+    let activeUserRow = null;
+
+    let debounceTimeout;
+
+    searchInput.value = initialFlaskQuery;
+
+    // --- Función para adjuntar manejadores de clic a las filas ---
+    function attachRowClickHandlers() {
+        // Reinicia el estado de selección global
+        selectedUserId = null;
+        selectedUserName = null;
+        selectedUserApellidos = null;
+        if (activeUserRow) {
+            activeUserRow.classList.remove('selected-user');
+            activeUserRow = null;
+        }
+
+        // Deshabilitar y resetear el botón de selección al (re)cargar las filas
+        if (selectUserBtn) {
+            selectUserBtn.disabled = true;
+        }
+
+        document.querySelectorAll('#users-table-body-select .user-row').forEach(row => {
+            row.removeEventListener('click', handleRowClick);
+            row.addEventListener('click', handleRowClick);
+        });
+    }
+
+    // --- Manejador de clic para seleccionar fila ---
+    function handleRowClick(event) {
+        const clickedRow = event.currentTarget;
+        // Evita que el clic en el botón "Ver Ficha" dentro de la fila también seleccione la fila.
+        if (event.target.tagName === 'A' && event.target.classList.contains('btn')) {
+            return;
+        }
+
+        // Si ya hay una fila activa, quitarle el resaltado
+        if (activeUserRow) {
+            activeUserRow.classList.remove('table-active');
+        }
+
+        // Resaltar la fila actual
+        clickedRow.classList.add('table-active');
+        activeUserRow = clickedRow;
+
+        // Capturar datos del usuario (necesitan data-id, data-nombre, data-apellidos en el <tr>)
+        selectedUserId = this.dataset.id;
+        selectedUserName = this.dataset.nombre;
+        selectedUserApellidos = this.dataset.apellidos;
+
+        selectUserBtn.disabled = false;
+    }
+
+    // --- Función principal para realizar la búsqueda y paginación vía AJAX ---
+    function performSearch(query, page) {
+        clearTimeout(debounceTimeout);
+
+        debounceTimeout = setTimeout(() => {
+            const baseUrl = "{{ url_for('users.listar_users_ajax_select') }}";
+            const urlObj = new URL(baseUrl, window.location.origin);
+            urlObj.searchParams.set('q', query);
+            urlObj.searchParams.set('page', page);
+
+            fetch(urlObj.toString())
+                .then(response => {
+                    if (!response.ok) {
+                        throw new Error(`Error HTTP! Estado: ${response.status}`);
+                    }
+                    return response.json();
+                })
+                .then(data => {
+                    usersTableBody.innerHTML = data.table_rows;
+                    paginationControls.innerHTML = data.pagination_html;
+                    attachRowClickHandlers();
+
+                    // Reinicia la selección después de una nueva búsqueda o paginación
+                    selectedUserId = null;
+                    selectedUserName = null;
+                    selectedUserApellidos = null;
+                    selectUserBtn.disabled = true;
+                })
+                .catch(error => {
+                    usersTableBody.innerHTML = '<tr><td colspan="7" class="text-center no-users-message">Error al cargar usuarios.</td></tr>';
+                    paginationControls.innerHTML = '';
+                    selectedUserId = null;
+                    selectedUserName = null;
+                    selectedUserApellidos = null;
+                    selectUserBtn.disabled = true;
+                });
+        }, 300);
+    }
+
+    // --- Event Listeners para búsqueda y paginación ---
+    searchInput.addEventListener('input', function() {
+        performSearch(searchInput.value, 1);
+    });
+
+    if (searchForm) {
+        searchForm.addEventListener('submit', function(event) {
+            event.preventDefault();
+            performSearch(searchInput.value, 1);
+        });
+    }
+
+    showAllButton.addEventListener('click', function() {
+        searchInput.value = '';
+        performSearch('', 1);
+    });
+
+    if (paginationControls) {
+        paginationControls.addEventListener('click', function(event) {
+            const pageLink = event.target.closest('a.page-link');
+            if (pageLink && !pageLink.parentElement.classList.contains('disabled')) {
+                event.preventDefault();
+                const url = new URL(pageLink.href);
+                const page = parseInt(url.searchParams.get('page')) || 1;
+                const query = searchInput.value;
+                performSearch(query, page);
+            }
+        });
+    }
+
+    // --- Event Listener para el botón "Seleccionar Usuario" ---
+    selectUserBtn.addEventListener('click', function() {
+        if (selectedUserId) {
+            const currentUrlParams = new URLSearchParams(window.location.search);
+            const redirectUrl = new URL("{{ url_for('loans.realizar_prestamo', _external=true) }}");
+
+            currentUrlParams.forEach((value, key) => {
+                redirectUrl.searchParams.set(key, value);
+            });
+
+            redirectUrl.searchParams.set('id_usuario_seleccionado', selectedUserId);
+            redirectUrl.searchParams.set('nombre_usuario_seleccionado', selectedUserName);
+            redirectUrl.searchParams.set('apellidos_usuario_seleccionado', selectedUserApellidos);
+
+            window.location.href = redirectUrl.toString();
+        } else {
+            // El botón debería estar deshabilitado si no hay selección.
+        }
+    });
+
+    // --- El botón cancelSelectUserBtn ahora funciona como "Volver al Formulario de Préstamo" ---
+    cancelSelectUserBtn.addEventListener('click', function() {
+        const currentUrlParams = new URLSearchParams(window.location.search);
+        const redirectUrl = new URL("{{ url_for('loans.realizar_prestamo', _external=true) }}");
+        currentUrlParams.forEach((value, key) => {
+            redirectUrl.searchParams.append(key, value);
+        });
+        window.location.href = redirectUrl.toString();
+    });
+
+    // --- Carga Inicial ---
+    performSearch(initialFlaskQuery, initialFlaskPage);
+});
+</script>
+{% endblock %}

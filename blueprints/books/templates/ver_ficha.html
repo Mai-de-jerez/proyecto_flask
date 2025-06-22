@@ -1,0 +1,148 @@
+{% extends 'base.html' %}
+
+{% block title %}Ficha de Libro: {{ libro.titulo }}{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="row justify-content-center">
+        <div class="col-md-7">
+            <header class="text-center mb-4">
+                <h1>Ficha del Libro: <span class="fw-bold">{{ libro.titulo }}</span></h1>
+            </header>
+            <div class="card mb-4 shadow-sm">
+                <div class="card-header bg-light text-dark fw-bold">
+                    Detalles Completos del Libro
+                </div>
+                <div class="card-body">
+                    <dl class="row mb-0">
+                        {# Número de Registro #}
+                        <dt class="col-sm-4 text-secondary">Número de Registro:</dt>
+                        <dd class="col-sm-8">
+                            <input type="text" class="form-control" value="{{ libro.id }}" readonly>
+                        </dd>
+
+                        {# Título #}
+                        <dt class="col-sm-4 text-secondary">Título:</dt>
+                        <dd class="col-sm-8">
+                            <input type="text" class="form-control" value="{{ libro.titulo }}" readonly>
+                        </dd>
+
+                        {# Subtítulo #}
+                        <dt class="col-sm-4 text-secondary">Subtítulo:</dt>
+                        <dd class="col-sm-8">
+                            <input type="text" class="form-control" value="{% if libro.subtitulo is not none %}{{ libro.subtitulo }}{% endif %}" readonly>
+                        </dd>
+
+                        {# Autor Principal #}
+                        <dt class="col-sm-4 text-secondary">Autor Principal:</dt>
+                        <dd class="col-sm-8">
+                            <input type="text" class="form-control" value="{{ libro.autor_principal_nombre }}" readonly>
+                        </dd>
+
+                        {# Segundo Autor #}
+                        <dt class="col-sm-4 text-secondary">Segundo Autor:</dt>
+                        <dd class="col-sm-8">
+                            <input type="text" class="form-control" value="{% if libro.segundo_autor_nombre is not none %}{{ libro.segundo_autor_nombre }}{% endif %}" readonly>
+                        </dd>
+
+                        {# Tercer Autor #}
+                        <dt class="col-sm-4 text-secondary">Tercer Autor:</dt>
+                        <dd class="col-sm-8">
+                            <input type="text" class="form-control" value="{% if libro.tercer_autor_nombre is not none %}{{ libro.tercer_autor_nombre }}{% endif %}" readonly>
+                        </dd>
+
+                        {# Letras Título #}
+                        <dt class="col-sm-4 text-secondary">Letras Título:</dt>
+                        <dd class="col-sm-8">
+                            <input type="text" class="form-control" value="{% if libro.let_titulo is not none %}{{ libro.let_titulo }}{% endif %}" readonly>
+                        </dd>
+
+                        {# Letras Autor #}
+                        <dt class="col-sm-4 text-secondary">Letras Autor:</dt>
+                        <dd class="col-sm-8">
+                            <input type="text" class="form-control" value="{% if libro.let_autor is not none %}{{ libro.let_autor }}{% endif %}" readonly>
+                        </dd>
+
+                        {# CDU #}
+                        <dt class="col-sm-4 text-secondary">CDU:</dt>
+                        <dd class="col-sm-8">
+                            <input type="text" class="form-control" value="{{ libro.cdu_completa }}" readonly>
+                        </dd>
+
+                        {# Año #}
+                        <dt class="col-sm-4 text-secondary">Año:</dt>
+                        <dd class="col-sm-8">
+                            <input type="text" class="form-control" value="{% if libro.anio is not none %}{{ libro.anio }}{% endif %}" readonly>
+                        </dd>
+
+                        {# Editorial #}
+                        <dt class="col-sm-4 text-secondary">Editorial:</dt>
+                        <dd class="col-sm-8">
+                            <input type="text" class="form-control" value="{{ libro.nombre_editorial }}" readonly>
+                        </dd>
+
+                        {# Páginas #}
+                        <dt class="col-sm-4 text-secondary">Páginas:</dt>
+                        <dd class="col-sm-8">
+                            <input type="text" class="form-control" value="{% if libro.paginas is not none %}{{ libro.paginas }}{% endif %}" readonly>
+                        </dd>
+
+                        {# Idioma #}
+                        <dt class="col-sm-4 text-secondary">Idioma:</dt>
+                        <dd class="col-sm-8">
+                            <input type="text" class="form-control" value="{{ libro.nombre_idioma }}" readonly>
+                        </dd>
+
+                        {# ISBN #}
+                        <dt class="col-sm-4 text-secondary">ISBN:</dt>
+                        <dd class="col-sm-8">
+                            <input type="text" class="form-control" value="{% if libro.isbn is not none %}{{ libro.isbn }}{% endif %}" readonly>
+                        </dd>
+                        <dt class="col-sm-4 text-secondary">Observaciones:</dt>
+                        <dd class="col-sm-8">
+                            <textarea class="form-control" rows="5" readonly>{% if libro.observaciones is not none %}{{ libro.observaciones }}{% endif %}</textarea>
+                        </dd>
+                        <dt class="col-sm-4 text-secondary">Disponible:</dt>
+                        <dd class="col-sm-8">
+                            <input type="text" class="form-control" value="{% if libro.disponible == 'Si' %}Sí{% else %}No{% endif %}" readonly>
+                        </dd>
+                    </dl>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="d-flex justify-content-center mt-3 mb-5">
+        <a href="{{ url_for('books.editar_libro', book_id=libro.id, next=next_url) }}" class="btn btn-warning me-2">
+            Actualizar Libro
+        </a>
+        <button type="button" class="btn btn-danger me-2" data-bs-toggle="modal" data-bs-target="#confirmDeleteModalFicha">
+            Eliminar Libro
+        </button>
+            <a href="{{ next_url }}" class="btn btn-dark">Volver Atrás</a>
+    </div>
+
+</div>
+
+{# Modal de Confirmación de Eliminación para la ficha #}
+<div class="modal fade" id="confirmDeleteModalFicha" tabindex="-1" aria-labelledby="confirmDeleteModalFichaLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="confirmDeleteModalFichaLabel">Confirmar Eliminación</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                ¿Estás seguro de que quieres eliminar el libro "<span class="fw-bold">{{ libro.titulo }}</span>" (ID: <span class="fw-bold">{{ libro.id }}</span>)? Esta acción no se puede deshacer.
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                <form method="POST" action="{{ url_for('books.eliminar_libro', book_id=libro.id) }}">
+                    <button type="submit" class="btn btn-danger">Eliminar</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+{% endblock %}
+

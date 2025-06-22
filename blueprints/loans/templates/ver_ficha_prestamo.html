@@ -1,0 +1,157 @@
+{% extends 'base.html' %}
+
+{% block title %}Ficha de Préstamo - {{ prestamo.id }}{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="row justify-content-center">
+        {# Usamos col-md-7 para un ancho similar al de la ficha de usuario #}
+        <div class="col-md-7">
+            <header class="text-center mb-4">
+                <h1>Detalles del Préstamo: <span class="fw-bold">{{ prestamo.id }}</span></h1>
+            </header>
+            <div class="card mb-4 shadow-sm">
+                {# Header de la tarjeta, similar al de la ficha de usuario #}
+                <div class="card-header bg-light text-dark fw-bold">
+                    Información Completa del Préstamo
+                </div>
+                <div class="card-body">
+                    <dl class="row mb-0">
+                        {# ID de Préstamo #}
+                        <dt class="col-sm-4 text-secondary">ID de Préstamo:</dt>
+                        <dd class="col-sm-8">
+                            <input type="text" class="form-control" value="{{ prestamo.id }}" readonly>
+                        </dd>
+
+                        {# ID de Libro #}
+                        <dt class="col-sm-4 text-secondary">ID de Libro:</dt>
+                        <dd class="col-sm-8">
+                            <input type="text" class="form-control" value="{{ prestamo.id_libro }}" readonly>
+                        </dd>
+
+                        {# ID de Usuario #}
+                        <dt class="col-sm-4 text-secondary">ID de Usuario:</dt>
+                        <dd class="col-sm-8">
+                            <input type="text" class="form-control" value="{{ prestamo.id_usuario }}" readonly>
+                        </dd>
+
+                        {# Título del Libro #}
+                        <dt class="col-sm-4 text-secondary">Libro (Título):</dt>
+                        <dd class="col-sm-8">
+                            <input type="text" class="form-control" value="{{ prestamo.libro_titulo }}" readonly>
+                        </dd>
+
+                        {# Autor del Libro #}
+                        <dt class="col-sm-4 text-secondary">Libro (Autor):</dt>
+                        <dd class="col-sm-8">
+                            <input type="text" class="form-control" value="{{ prestamo.libro_autor }}" readonly>
+                        </dd>
+
+
+                        {# Nombre Completo del Usuario #}
+                        <dt class="col-sm-4 text-secondary">Usuario (Nombre):</dt>
+                        <dd class="col-sm-8">
+                            <input type="text" class="form-control" value="{{ prestamo.usuario_nombre }} {{ prestamo.usuario_apellidos }}" readonly>
+                        </dd>
+
+                        {# Nuevo: Módulo del Usuario #}
+                        <dt class="col-sm-4 text-secondary">Usuario (Módulo):</dt>
+                        <dd class="col-sm-8">
+                            <input type="text" class="form-control" value="{{ prestamo.usuario_modulo_nombre | default('N/A') }}" readonly>
+                        </dd>
+
+                        {# Fecha de Préstamo #}
+                        <dt class="col-sm-4 text-secondary">Fecha de Préstamo:</dt>
+                        <dd class="col-sm-8">
+                            <input type="text" class="form-control" value="{{ prestamo.fecha_prestamo }}" readonly>
+                        </dd>
+
+                        {# Fecha de Devolución Estimada #}
+                        <dt class="col-sm-4 text-secondary">Fecha Devolución Estimada:</dt>
+                        <dd class="col-sm-8">
+                            <input type="text" class="form-control" value="{{ prestamo.fecha_devolucion_estimada | default('N/A', true) }}" readonly>
+                        </dd>
+
+                        {# Fecha de Devolución Real #}
+                        <dt class="col-sm-4 text-secondary">Fecha Devolución Real:</dt>
+                        <dd class="col-sm-8">
+                            <input type="text" class="form-control" value="{{ prestamo.fecha_devolucion_real | default('PENDIENTE', true) }}" readonly>
+                        </dd>
+
+                        {# Estado del Préstamo #}
+                        <dt class="col-sm-4 text-secondary">Estado del Préstamo:</dt>
+                        <dd class="col-sm-8">
+                            {# Aquí aplicamos los badges de color como en el listado de préstamos #}
+                            {% if prestamo.fecha_devolucion_real %}
+                                <span class="badge bg-success">DEVUELTO</span>
+                            {% else %}
+                                {% if prestamo.estado_prestamo == 'Vencido' %} {# Usamos 'Vencido' si lo asignas en la DB o por lógica de la ruta #}
+                                    <span class="badge bg-danger">VENCIDO</span>
+                                {% else %}
+                                    <span class="badge bg-warning">PRESTADO</span> {# PRESTADO y VENCIDO son ambos warning según tu última solicitud #}
+                                {% endif %}
+                            {% endif %}
+                        </dd>
+                    </dl>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="d-flex justify-content-center mt-3 mb-5">
+        {# Botón para volver al listado de préstamos #}
+        <a href="{{ url_for('loans.listar_prestamos') }}" class="btn btn-secondary me-3">Volver al Listado de Préstamos</a>
+        {# Botón para abrir el modal de eliminación, con el data-loan-id #}
+        <button type="button" class="btn btn-danger" data-bs-toggle="modal" data-bs-target="#confirmDeleteModal" data-loan-id="{{ prestamo.id }}">
+            Eliminar Préstamo
+        </button>
+    </div>
+</div>
+
+{# Modal de Confirmación de Eliminación #}
+<div class="modal fade" id="confirmDeleteModal" tabindex="-1" aria-labelledby="confirmDeleteModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="confirmDeleteModalLabel">Confirmar Eliminación</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                ¿Estás seguro de que quieres eliminar el préstamo <span id="modalLoanId" class="fw-bold"></span>?
+                Esta acción no se puede deshacer.
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                {# Formulario oculto para enviar la solicitud DELETE/POST #}
+                <form id="deleteLoanForm" method="POST" action="">
+                    <button type="submit" class="btn btn-danger">Eliminar</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Obtenemos el modal de confirmación
+        var confirmDeleteModal = document.getElementById('confirmDeleteModal');
+
+        // Escuchamos el evento 'show.bs.modal' cuando el modal se va a mostrar
+        confirmDeleteModal.addEventListener('show.bs.modal', function(event) {
+            // Botón que disparó el modal
+            var button = event.relatedTarget;
+            // Obtenemos el ID del préstamo del atributo data-loan-id del botón
+            var loanId = button.getAttribute('data-loan-id');
+
+            // Actualizamos el texto dentro del modal con el ID del préstamo
+            var modalLoanIdSpan = confirmDeleteModal.querySelector('#modalLoanId');
+            modalLoanIdSpan.textContent = loanId;
+
+            // Actualizamos la acción del formulario de eliminación
+            var deleteForm = confirmDeleteModal.querySelector('#deleteLoanForm');
+            // Construimos la URL usando el ID del préstamo.
+            // Asegúrate de que el prefijo del blueprint 'loans' esté incluido si lo usas en Flask.
+            deleteForm.action = "{{ url_for('loans.eliminar_prestamo', id_prestamo=0) }}".replace('0', loanId);
+        });
+    });
+</script>
+{% endblock %}

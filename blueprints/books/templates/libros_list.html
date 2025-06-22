@@ -1,0 +1,118 @@
+{# libros_list.html #}
+{% extends 'base.html' %}
+{% block title %}Catálogo de Libros{% endblock %}
+
+{% block content %}
+<div class="container-fluid mt-3 mb-5">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <form class="d-flex" id="search-form" action="{{ url_for('books.listar_libros') }}" method="GET">
+            <input class="form-control me-2 search-input" type="search" placeholder="Buscar libros..." aria-label="Search" name="q" id="search-input" value="{{ q }}">
+            <button class="btn btn-outline-secondary search-button" type="button" id="show-all-button">Mostrar todos</button>
+        </form>
+        <a href="{{ url_for('books.anadir_libro') }}" class="btn btn-info btn-sm me-2">Añadir Nuevo Libro</a>
+    </div>
+    <div class="card shadow-sm mb-7">
+        <div class="card-header bg-dark text-white text-center fw-bold fs-5">
+            Catálogo de Libros Registrados
+        </div>
+        <div class="card-body">
+            <div class="table-responsive">
+                <table class="table table-striped table-hover" id="librosTable">
+                    <thead>
+                        <tr>
+                            <th scope="col">NumReg</th>
+                            <th scope="col">Título</th>
+                            <th scope="col">Autor Principal</th>
+                            <th scope="col">CDU</th>
+                            <th scope="col">Materia</th>
+                            <th scope="col">LetTítulo</th>
+                            <th scope="col">LetAutor</th>
+                            <th scope="col">Disponible</th>
+                            <th scope="col" class="acciones-columna"></th>
+                        </tr>
+                    </thead>
+                    <tbody id="libros-table-body" class="small">
+                        {% include '_libros_table_rows.html' %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <nav aria-label="Navegación de libros" class="mt-4">
+        <ul class="pagination justify-content-center" id="pagination-controls">
+            {% include '_pagination_controls_books.html' %}
+        </ul>
+    </nav>
+</div>
+{% endblock %}
+{% block scripts %}
+{{ super() }}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const searchInput = document.getElementById('search-input');
+        const showAllButton = document.getElementById('show-all-button');
+        const librosTableBody = document.getElementById('libros-table-body');
+        const paginationControls = document.getElementById('pagination-controls');
+        const searchForm = document.getElementById('search-form');
+
+        let debounceTimeout;
+        function performSearch(query = searchInput.value, page = 1) {
+            clearTimeout(debounceTimeout);
+            debounceTimeout = setTimeout(() => {
+                const url = `{{ url_for('books.listar_libros_ajax') }}?q=${encodeURIComponent(query)}&page=${page}`;
+
+                fetch(url)
+                    .then(response => {
+                        if (!response.ok) {
+                            throw new Error(`Error HTTP! Estado: ${response.status}`);
+                        }
+                        return response.json();
+                    })
+                    .then(data => {
+                        librosTableBody.innerHTML = data.table_rows;
+                        paginationControls.innerHTML = data.pagination_html;
+                    })
+                    .catch(error => {
+                        console.error('Error en la petición o procesamiento:', error);
+                        librosTableBody.innerHTML = '<tr><td colspan="9" class="text-center text-danger">Error al cargar los libros.</td></tr>';
+                        paginationControls.innerHTML = '';
+                    });
+            }, 300);
+        }
+
+        // Event listener para el input de búsqueda (se dispara al escribir)
+        searchInput.addEventListener('input', function() {
+            performSearch(searchInput.value, 1);
+        });
+
+        // Event listener para el botón "Mostrar todos"
+        showAllButton.addEventListener('click', function() {
+            searchInput.value = '';
+            performSearch('', 1);
+        });
+
+        // Añadido listener para evitar el envío normal del formulario al presionar Enter
+        if (searchForm) {
+            searchForm.addEventListener('submit', function(event) {
+                event.preventDefault();
+                performSearch(searchInput.value, 1);
+            });
+        }
+
+        if (paginationControls) {
+            paginationControls.addEventListener('click', function(event) {
+                const pageLink = event.target.closest('a.page-link');
+
+                if (pageLink) {
+                    event.preventDefault();
+                    const url = new URL(pageLink.href);
+                    const page = parseInt(url.searchParams.get('page')) || 1;
+                    const query = searchInput.value;
+                    performSearch(query, page);
+                }
+            });
+        }
+    });
+</script>
+{% endblock %}
