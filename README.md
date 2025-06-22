@@ -47,24 +47,25 @@ Este proyecto es un sistema web integral diseñado para la gestión eficiente de
 
 * **Búsquedas Inteligentes:**
 
-Funcionalidades de búsqueda optimizadas, insensibles a mayúsculas/minúsculas y a tildes (acentos), facilitando la localización de información.
+   * Funcionalidades de búsqueda optimizadas, insensibles a mayúsculas/minúsculas y a tildes (acentos), facilitando la localización de información.
 
-Copias de Seguridad y Exportación de Datos:
+* **Copias de Seguridad y Exportación de Datos:**
 
-Generación de copias de seguridad de la base de datos completa.
+   * Generación de copias de seguridad de la base de datos completa.
 
-Exportación de datos de cualquier tabla a formatos PDF y Excel (XLSX).
+   * Exportación de datos de cualquier tabla a formatos PDF y Excel (XLSX).
 
-Interfaz de Usuario Amigable:
+* **Interfaz de Usuario Amigable:**
 
-Diseño limpio, intuitivo y responsivo basado en Bootstrap 5, asegurando una experiencia de usuario óptima en cualquier dispositivo.
+   * Diseño limpio, intuitivo y **responsivo** basado en Bootstrap 5, asegurando una experiencia de usuario óptima en cualquier dispositivo.
 
-Mensajes claros para guiar al usuario en cada operación.
+   * Mensajes claros para guiar al usuario en cada operación.
 
-🛠️ Tecnologías Utilizadas
-Backend:
+## 🛠️ Tecnologías Utilizadas
 
-Python 3.x
+* **Backend:**
+
+   * [Python 3.13](https://www.python.org/)
 
 Flask (Microframework web)
 
@@ -72,7 +73,7 @@ SQLite (Base de datos embebida)
 
 python-dotenv (Para gestión segura de variables de entorno)
 
-pandas (Para manipulación de datos y exportación a Excel)
+pandas (Para manipulación de datos y exportación a Excel en caso de que se necesiten importar datos ya existentes de otra base)
 
 xlsxwriter (Para la creación de archivos Excel)
 
