@@ -98,8 +98,8 @@ Sigue estos pasos para configurar y ejecutar el proyecto en tu entorno local:
 1. Clona el repositorio:
 
 ```
-git clone <URL_DE_TU_REPOSITORIO>
-cd <nombre_de_tu_repositorio>
+git clone https://github.com/Mai-de-jerez/proyecto_flask
+cd proyecto_flask
 ```
 
 2. Crea y activa un entorno virtual (muy recomendado):
@@ -108,11 +108,11 @@ cd <nombre_de_tu_repositorio>
 python -m venv .venv
 ```
 
-# En Windows:
+### En Windows:
 ```
 .\.venv\Scripts\activate
 ```
-# En macOS/Linux:
+### En macOS/Linux:
 ```
 source ./.venv/bin/activate
 ```
