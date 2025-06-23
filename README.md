@@ -241,7 +241,7 @@ Este proyecto está bajo la Licencia MIT. Consulta el archivo `LICENSE` en el re
 ## 📧 Contacto
 
 Para cualquier pregunta o sugerencia, no dudes en contactar:
-[Mai-de-jerez]
-[mainen1985@gmail.com (Opcional)]
+[https://github.com/Mai-de-jerez/]  
+[mainen1985@gmail.com]
 
 Este proyecto fue generado con el cariño y la ayuda de `GEMINI`, una IA fascinante.
