@@ -40,7 +40,7 @@ La utilidad real es que este proyecto no necesita internet, que es un handicup q
 
    * **Manejo Inteligente de Empates**: Identifica y muestra todos los libros, autores y módulos empatados en las posiciones más destacadas (ej. más leídos, con más préstamos), presentándolos de forma clara en líneas separadas.
 
-   * **Perfil del Lector por Género**: Si hay un empate entre varios géneros en la categoría de "más lectores", el sistema indica "Indiferente" para reflejar la diversidad.
+   * **Perfil del Lector por Género**: muestra el número de libros leídos por cada género.
 
 * **Creación Dinámica de Datos Maestros:**
 
