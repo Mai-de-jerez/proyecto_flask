@@ -1,0 +1,323 @@
+{# blueprints/loans/templates/listar_prestamos.html #}
+{% extends 'base.html' %}
+{% block title %}Listado de Préstamos{% endblock %}
+{% block content %}
+<div class="container-fluid mt-3 mb-5">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <form class="d-flex" id="search-form" action="{{ url_for('loans.listar_prestamos') }}" method="GET">
+            <input class="form-control me-2 search-input" type="search" placeholder="Buscar préstamo..." aria-label="Search" name="q" id="search-input" value="{{ q }}">
+            <button class="btn btn-outline-secondary search-button" type="button" id="show-all-button">Mostrar todos</button>
+
+            {# Selector de Filtro por Estado #}
+            <select class="form-select ms-2" id="filter-status-select" name="filter_status" aria-label="Filtrar por estado">
+                <option value="">Todos los Estados</option>
+                <option value="Prestado">Prestados</option>
+                <option value="Devuelto">Devueltos</option>
+                <option value="Vencido">Vencidos</option>
+            </select>
+
+            {# Selector de Ordenación #}
+            <select class="form-select ms-2" id="sort-select" name="sort_by" aria-label="Ordenar por">
+                <option value="">Ordenar por...</option>
+                <option value="fecha_prestamo_desc">Fecha Préstamo (más recientes)</option>
+                <option value="fecha_prestamo_asc">Fecha Préstamo (más antiguos)</option>
+                <option value="fecha_devolucion_estimada_desc">Fecha Devolución Est. (más recientes)</option>
+                <option value="fecha_devolucion_estimada_asc">Fecha Devolución Est. (más antiguos)</option>
+                <option value="titulo_libro_asc">Título Libro (A-Z)</option>
+                <option value="titulo_libro_desc">Título Libro (Z-A)</option>
+                <option value="nombre_usuario_asc">Nombre Usuario (A-Z)</option>
+                <option value="nombre_usuario_desc">Nombre Usuario (Z-A)</option>
+            </select>
+        </form>
+        <a href="{{ url_for('loans.realizar_prestamo') }}" class="btn btn-info btn-sm ms-2">Realizar Nuevo Préstamo</a> {# ms-2 añadido para separar #}
+    </div>
+
+    <main>
+        <div class="card shadow-sm mb-7">
+            <div class="card-header bg-dark text-white text-center fw-bold fs-5">
+                Listado de Préstamos Registrados
+            </div>
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table class="table table-striped table-hover" id="prestamosTable">
+                        <thead>
+                            <tr>
+                                <th scope="col">Título del Libro</th>
+                                <th scope="col">Nombre (Socio)</th>
+                                <th scope="col">FechaPrest</th>
+                                <th scope="col">FechaDevEst</th>
+                                <th scope="col">FechaDevReal</th>
+                                <th scope="col">EstadoPrest</th>
+                                <th scope="col" class="acciones-columna">Acciones</th>
+                            </tr>
+                        </thead>
+                        <tbody id="prestamos-table-body" class="small">
+                            {% include '_prestamos_table_rows.html' with context %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <nav aria-label="Navegación de préstamos" class="mt-5">
+        <ul class="pagination justify-content-center" id="pagination-controls">
+            {# Esto se cargará con AJAX, pero la plantilla inicial lo incluye por si acaso #}
+            {% include '_pagination_controls.html' %}
+        </ul>
+    </nav>
+</div>
+{# El modal de confirmación de devolución se mantiene igual #}
+<div class="modal fade" id="confirmReturnModal" tabindex="-1" aria-labelledby="confirmReturnModalLabel" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content">
+      <div class="modal-header bg-warning text-dark">
+        <h5 class="modal-title" id="confirmReturnModalLabel">Confirmar Devolución</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body">
+        ¿Estás seguro de que deseas devolver el libro **"<span id="modalLibroTitulo"></span>"** prestado a **"<span id="modalUsuarioNombre"></span>"**?
+        Esta acción marcará el libro como disponible y actualizará el préstamo.
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+        <button type="button" class="btn btn-success" id="confirmReturnBtn">Confirmar Devolución</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+{% endblock %}
+{% block scripts %}
+{{ super() }}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const initialQuery = "{{ q | default('') }}";
+        const initialPage = parseInt("{{ page | default(1) }}");
+        const initialFilterStatus = "{{ filter_status | default('') }}";
+        const initialSortBy = "{{ sort_by | default('fecha_prestamo') }}";
+        const initialSortDirection = "{{ sort_direction | default('desc') }}";
+        const searchInput = document.getElementById('search-input');
+        const showAllButton = document.getElementById('show-all-button');
+        const prestamosTableBody = document.getElementById('prestamos-table-body');
+        const paginationControls = document.getElementById('pagination-controls');
+        const searchForm = document.getElementById('search-form');
+        const filterStatusSelect = document.getElementById('filter-status-select');
+        const sortSelect = document.getElementById('sort-select');
+
+
+        let searchTimeout;
+
+        const fetchPrestamos = async (query = '', page = 1, filterStatus = '', sortBy = '', sortDirection = '') => {
+            const params = new URLSearchParams();
+            params.append('q', query);
+            params.append('page', page);
+            if (filterStatus) {
+                params.append('filter_status', filterStatus);
+            }
+            if (sortBy) {
+                params.append('sort_by', sortBy);
+                params.append('sort_direction', sortDirection);
+            }
+
+            const url = `{{ url_for('loans.listar_prestamos_ajax') }}?${params.toString()}`;
+
+
+            try {
+                const response = await fetch(url);
+                if (!response.ok) {
+                    throw new Error(`Error HTTP! Estado: ${response.status}`);
+                }
+                const data = await response.json();
+
+                prestamosTableBody.innerHTML = data.table_rows;
+                paginationControls.innerHTML = data.pagination_html;
+
+            } catch (error) {
+                prestamosTableBody.innerHTML = '<tr><td colspan="7" class="text-center text-danger">Error al cargar los préstamos. Por favor, inténtelo de nuevo.</td></tr>';
+                paginationControls.innerHTML = '';
+            }
+        };
+
+        const debounce = (func, delay) => {
+            return function(...args) {
+                const context = this;
+                clearTimeout(searchTimeout);
+                searchTimeout = setTimeout(() => func.apply(context, args), delay);
+            };
+        };
+
+        function getSortParamsFromSelect() {
+            const selectedValue = sortSelect.value;
+            let sortBy = '';
+            let sortDirection = '';
+            if (selectedValue) {
+                const parts = selectedValue.split('_');
+                sortDirection = parts[parts.length - 1].toUpperCase();
+                sortBy = parts.slice(0, -1).join('_'); // Reconstruir 'fecha_prestamo' o 'titulo_libro'
+            }
+            return [sortBy, sortDirection];
+        }
+
+        function getFilterStatusFromSelect() {
+            return filterStatusSelect ? filterStatusSelect.value : '';
+        }
+
+        searchInput.value = initialQuery;
+        if (filterStatusSelect) {
+            filterStatusSelect.value = initialFilterStatus;
+        }
+        if (sortSelect) {
+            // Reconstruye el valor para el sortSelect basado en initialSortBy y initialSortDirection
+            const sortValueToSelect = initialSortBy && initialSortDirection ?
+                                      `${initialSortBy}_${initialSortDirection.toLowerCase()}` : '';
+            sortSelect.value = sortValueToSelect;
+        }
+
+
+        // Event listener para el input de búsqueda
+        if (searchInput) {
+            searchInput.addEventListener('input', debounce(() => {
+                const [sortBy, sortDirection] = getSortParamsFromSelect();
+                const filterStatus = getFilterStatusFromSelect();
+                fetchPrestamos(searchInput.value, 1, filterStatus, sortBy, sortDirection);
+            }, 300));
+        }
+
+        // Event listener para el botón 'Mostrar todos'
+        if (showAllButton) {
+            showAllButton.addEventListener('click', function() {
+                searchInput.value = '';
+                filterStatusSelect.value = ''; // Limpiar filtro de estado
+                sortSelect.value = ''; // Limpiar ordenación
+
+                // Disparar búsqueda con todos los parámetros vacíos/por defecto
+                fetchPrestamos('', 1, '', '', '');
+            });
+        }
+
+        // Prevenir el envío normal del formulario al pulsar Enter en el input de búsqueda.
+        if (searchForm) {
+            searchForm.addEventListener('submit', function(event) {
+                event.preventDefault();
+                const [sortBy, sortDirection] = getSortParamsFromSelect();
+                const filterStatus = getFilterStatusFromSelect();
+                fetchPrestamos(searchInput.value, 1, filterStatus, sortBy, sortDirection);
+            });
+        }
+
+        if (filterStatusSelect) {
+            filterStatusSelect.addEventListener('change', function() {
+                const [sortBy, sortDirection] = getSortParamsFromSelect();
+                const filterStatus = getFilterStatusFromSelect();
+                fetchPrestamos(searchInput.value, 1, filterStatus, sortBy, sortDirection);
+            });
+        }
+
+        if (sortSelect) {
+            sortSelect.addEventListener('change', function() {
+                const [sortBy, sortDirection] = getSortParamsFromSelect();
+                const filterStatus = getFilterStatusFromSelect();
+                fetchPrestamos(searchInput.value, 1, filterStatus, sortBy, sortDirection);
+            });
+        }
+
+
+        // Event listener para los enlaces de paginación (usando delegación de eventos)
+        if (paginationControls) {
+            paginationControls.addEventListener('click', function(event) {
+                const pageLink = event.target.closest('a.page-link');
+
+                if (pageLink && !pageLink.parentElement.classList.contains('disabled')) {
+                    event.preventDefault();
+
+                    const page = parseInt(pageLink.dataset.page) || 1;
+                    const query = pageLink.dataset.q || '';
+                    const filterStatus = pageLink.dataset.filterStatus || '';
+                    const sortBy = pageLink.dataset.sortBy || '';
+                    const sortDirection = pageLink.dataset.sortDirection || '';
+
+
+                    // Sincronizar inputs/selects con los valores de la paginación
+                    searchInput.value = query;
+                    if (filterStatusSelect) filterStatusSelect.value = filterStatus;
+                    if (sortSelect) {
+                        const sortValueToSelect = sortBy && sortDirection ?
+                                                  `${sortBy}_${sortDirection.toLowerCase()}` : '';
+                        sortSelect.value = sortValueToSelect;
+                    }
+
+                    fetchPrestamos(query, page, filterStatus, sortBy, sortDirection);
+                }
+            });
+        }
+
+        const confirmReturnModalElement = document.getElementById('confirmReturnModal');
+        let confirmReturnModalInstance = null;
+        if (confirmReturnModalElement && typeof bootstrap !== 'undefined') {
+            confirmReturnModalInstance = new bootstrap.Modal(confirmReturnModalElement, {
+                backdrop: 'static',
+                keyboard: false
+            });
+        }
+
+
+        const confirmReturnBtn = document.getElementById('confirmReturnBtn');
+        let currentPrestamoId = null;
+        let currentNextUrlForAction = null;
+
+
+        prestamosTableBody.addEventListener('click', function(event) {
+            const button = event.target.closest('.btn-return-loan');
+
+            if (button) {
+                event.preventDefault();
+
+                currentPrestamoId = button.dataset.idPrestamo;
+                const libroTitulo = button.dataset.libroTitulo;
+                const usuarioNombre = button.dataset.usuarioNombre;
+                currentNextUrlForAction = button.dataset.nextUrl;
+                const modalLibroTituloSpan = document.getElementById('modalLibroTitulo');
+                const modalUsuarioNombreSpan = document.getElementById('modalUsuarioNombre');
+
+                if (modalLibroTituloSpan) modalLibroTituloSpan.textContent = libroTitulo;
+                if (modalUsuarioNombreSpan) modalUsuarioNombreSpan.textContent = usuarioNombre;
+
+                if (confirmReturnModalInstance) {
+                    confirmReturnModalInstance.show();
+                }
+            }
+        });
+
+        if (confirmReturnBtn) {
+            confirmReturnBtn.addEventListener('click', function() {
+                if (currentPrestamoId) {
+                    const tempForm = document.createElement('form');
+                    tempForm.method = 'POST';
+
+                    let baseActionUrl = `{{ url_for('loans.devolver_prestamo', id_prestamo=0) }}`;
+                    let actionUrlWithId = baseActionUrl.replace('/0', '/' + currentPrestamoId);
+
+                    const finalUrl = new URL(actionUrlWithId, window.location.origin);
+                    if (currentNextUrlForAction) {
+                        finalUrl.searchParams.set('next', currentNextUrlForAction);
+                    }
+
+                    tempForm.action = finalUrl.toString();
+                    tempForm.style.display = 'none'; // Ocultar el formulario
+                    document.body.appendChild(tempForm); // Añadirlo al DOM
+
+                    tempForm.submit(); // Enviar el formulario
+
+
+                    if (confirmReturnModalInstance) {
+                        confirmReturnModalInstance.hide();
+                    }
+                }
+            });
+        }
+        // Llamada inicial para cargar los préstamos al cargar la página
+        fetchPrestamos(initialQuery, initialPage, initialFilterStatus, initialSortBy, initialSortDirection);
+    });
+</script>
+{% endblock %}

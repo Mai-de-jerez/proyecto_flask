@@ -1,0 +1,33 @@
+{# _libros_table_rows.html #}
+{% for libro in libros %}
+<tr data-libro-id="{{ libro.id }}" data-libro-titulo="{{ libro.titulo }}" data-disponible="{{ libro.disponible }}">
+    <td>{{ libro.id }}</td>
+    <td>{{ libro.titulo }}</td>
+    <td>{{ libro.autor_principal }}</td>
+    <td>{{ libro.codigo_cdu }}</td>
+    <td>{{ libro.materia }}</td>
+    <td>{{ libro.let_titulo }}</td>
+    <td>{{ libro.let_autor }}</td>
+    <td>
+        {% if libro.disponible == 'Si' %}
+            <span class="badge bg-success">Sí</span>
+        {% else %}
+            <span class="badge bg-danger">No</span>
+        {% endif %}
+    </td>
+    <td>
+        {% set params_for_url = {
+            'q': q,
+            'page': page,
+            'sort_by': sort_by,
+            'sort_direction': sort_direction,
+            'filter_material_type': filter_material_type
+        } %}
+        <a href="{{ url_for('books.ver_ficha', book_id=libro.id, next=url_for(base_listing_endpoint, **params_for_url)) }}" class="btn btn-info btn-sm">Ver Ficha</a>
+    </td>
+</tr>
+{% else %}
+<tr>
+    <td colspan="9" class="text-center">No hay libros registrados con esos criterios.</td>
+</tr>
+{% endfor %}

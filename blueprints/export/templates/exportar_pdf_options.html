@@ -1,0 +1,121 @@
+{# exportar_pdf_options.html #}
+{% extends "base.html" %}
+
+{% block title %}Exportar a PDF{% endblock %}
+{% block content %}
+<div class="container p-4 bg-dark rounded-3 shadow-lg my-4"> {# Cambiado Tailwind a Bootstrap: p-8 -> p-4, bg-gray-800 -> bg-dark, bg-opacity-75 (quitado), rounded-xl -> rounded-3, shadow-2xl -> shadow-lg #}
+    <h2 class="mb-4 text-white bg-dark p-3 rounded-2 d-inline-block">Exportar a PDF</h2> {# Cambiado: bg-gray-900 -> bg-dark, bg-opacity-60 (quitado), rounded-md -> rounded-2, inline-block -> d-inline-block #}
+
+    <form method="POST" action="{{ url_for('export.generar_pdf') }}" id="pdf_export_form" class="mb-3"> {# space-y-4 (quitado), mb-3 para espaciado general del formulario #}
+        <!-- Mensaje de error para el usuario -->
+        <div id="error_message" class="d-none bg-danger text-white p-3 rounded-2 mb-4" role="alert"></div> {# hidden -> d-none, bg-red-700 -> bg-danger, rounded-md -> rounded-2 #}
+
+        <!-- Selección de Tabla -->
+        <div class="mb-3"> {# form-group (quitado, usando mb-3 para espaciado) #}
+            <label for="selected_table" class="d-block text-white fs-6 fw-bold mb-2">Selecciona una tabla:</label> {# block -> d-block, text-sm -> fs-6, font-bold -> fw-bold #}
+            <select name="selected_table" id="selected_table" class="form-select text-secondary bg-white"> {# shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline -> form-select, text-gray-700 -> text-secondary #}
+                <option value="">-- Selecciona una tabla --</option>
+                {% for table in table_names %}
+                <option value="{{ table }}">{{ table }}</option>
+                {% endfor %}
+            </select>
+        </div>
+
+        <!-- Selección de Campos (dinámica) -->
+        <div class="mb-3"> {# form-group (quitado), mb-3 #}
+            <label class="d-block text-white fs-6 fw-bold mb-2">Selecciona los campos:</label> {# block -> d-block, text-sm -> fs-6, font-bold -> fw-bold #}
+            <div id="columns_selection" class="row row-cols-1 row-cols-md-2 row-cols-lg-3 g-2 bg-secondary p-4 rounded-2"> {# grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-2 -> row row-cols-1 row-cols-md-2 row-cols-lg-3 g-2, bg-gray-700 bg-opacity-50 -> bg-secondary, rounded-md -> rounded-2 #}
+                <!-- Los campos se cargarán aquí dinámicamente con JavaScript -->
+                <p class="text-secondary">Selecciona una tabla para ver los campos disponibles.</p> {# text-gray-400 -> text-secondary #}
+            </div>
+        </div>
+
+        <!-- Botón de Exportar -->
+        <button type="submit" class="btn btn-primary mt-3"> {# Añadido btn btn-primary y mt-3 #}
+            Generar PDF
+        </button>
+    </form>
+</div>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const selectedTable = document.getElementById('selected_table');
+        const columnsSelectionDiv = document.getElementById('columns_selection');
+        const pdfExportForm = document.getElementById('pdf_export_form');
+        const errorMessageDiv = document.getElementById('error_message');
+
+        const getColumnsUrlTemplate = "{{ url_for('export.get_columns', table_name='PLACEHOLDER') }}";
+
+        function showErrorMessage(message) {
+            errorMessageDiv.textContent = message;
+            errorMessageDiv.classList.remove('d-none'); // Cambiado 'hidden' a 'd-none' para Bootstrap
+        }
+
+        function hideErrorMessage() {
+            errorMessageDiv.classList.add('d-none'); // Cambiado 'hidden' a 'd-none' para Bootstrap
+            errorMessageDiv.textContent = '';
+        }
+
+        selectedTable.addEventListener('change', function() {
+            const tableName = this.value;
+            hideErrorMessage();
+            columnsSelectionDiv.innerHTML = '<p class="text-secondary">Cargando campos...</p>'; // Cambiado text-gray-400 a text-secondary
+
+            if (tableName) {
+                const fetchUrl = getColumnsUrlTemplate.replace('PLACEHOLDER', tableName);
+
+                fetch(fetchUrl)
+                    .then(response => {
+                        if (!response.ok) {
+                            throw new Error(`HTTP error! status: ${response.status}`);
+                        }
+                        return response.json();
+                    })
+                    .then(columns => {
+                        columnsSelectionDiv.innerHTML = ''; // Limpiar el contenido anterior
+                        if (columns.length > 0) {
+                            columns.forEach(column => {
+                                const checkboxDiv = document.createElement('div');
+                                // Cambiado Tailwind a Bootstrap: flex items-center -> form-check
+                                checkboxDiv.className = 'form-check col'; // Añadido 'col' para que se ajuste al grid de Bootstrap
+                                checkboxDiv.innerHTML = `
+                                    <input type="checkbox" name="selected_columns" value="${column}" id="col_${column}" class="form-check-input">
+                                    <label for="col_${column}" class="form-check-label text-white ms-2">${column}</label> {# Añadido ms-2 para el label #}
+                                `;
+                                columnsSelectionDiv.appendChild(checkboxDiv);
+                            });
+                        } else {
+                            columnsSelectionDiv.innerHTML = '<p class="text-secondary">No se encontraron campos para esta tabla.</p>'; // Cambiado text-gray-400 a text-secondary
+                        }
+                    })
+                    .catch(error => {
+                        console.error('Error al cargar las columnas:', error);
+                        columnsSelectionDiv.innerHTML = '<p class="text-danger">Error al cargar campos.</p>'; // Cambiado text-red-400 a text-danger
+                        showErrorMessage('Error al cargar los campos. Por favor, inténtalo de nuevo.');
+                    });
+            } else {
+                columnsSelectionDiv.innerHTML = '<p class="text-secondary">Selecciona una tabla para ver los campos disponibles.</p>'; // Cambiado text-gray-400 a text-secondary
+            }
+        });
+
+        pdfExportForm.addEventListener('submit', function(event) {
+            hideErrorMessage();
+
+            // Validar que se ha seleccionado una tabla
+            if (selectedTable.value === "") {
+                showErrorMessage('Por favor, selecciona una tabla antes de generar el PDF.');
+                event.preventDefault(); // Detener el envío del formulario
+                return;
+            }
+
+            // Validar que se ha seleccionado al menos un campo
+            const selectedColumnsCheckboxes = columnsSelectionDiv.querySelectorAll('input[name="selected_columns"]:checked');
+            if (selectedColumnsCheckboxes.length === 0) {
+                showErrorMessage('Por favor, selecciona al menos un campo para exportar.');
+                event.preventDefault(); // Detener el envío del formulario
+                return;
+            }
+        });
+    });
+</script>
+{% endblock %}

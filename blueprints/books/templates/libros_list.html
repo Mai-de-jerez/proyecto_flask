@@ -1,0 +1,267 @@
+{# libros_list.html #}
+{% extends 'base.html' %}
+{% block title %}Catálogo de Libros{% endblock %}
+
+{% block content %}
+<div class="container-fluid mt-3 mb-5">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <form class="d-flex" id="search-form" action="{{ url_for('books.listar_libros') }}" method="GET">
+            {# BUSCADOR #}
+            <input class="form-control me-2 search-input" type="search" placeholder="Buscar libros..." aria-label="Search" name="q" id="search-input" value="{{ q }}">
+            <button class="btn btn-outline-secondary search-button" type="button" id="show-all-button">Mostrar todos</button>
+
+            {# --- CONTROL DE ORDENACIÓN --- #}
+            <select class="form-select ms-2" id="sort-select" name="sort_by" aria-label="Ordenar por">
+                <option value="">Ordenar por...</option>
+                <option value="titulo_asc">Título (A-Z)</option>
+                <option value="titulo_desc">Título (Z-A)</option>
+                <option value="autor_principal_asc">Autor (A-Z)</option>
+                <option value="autor_principal_desc">Autor (Z-A)</option>
+            </select>
+            {# --- FILTRO POR TIPO DE MATERIAL --- #}
+            <select class="form-select ms-2" id="filter-material-type-select" name="filter_material_type" aria-label="Filtrar por tipo de material">
+                <option value="">Mostrar solo...</option>
+                <option value="dvd">DVDs</option>
+                <option value="revista">Revistas</option>
+                <option value="curso">Cursos</option>
+                <option value="diccionario_enciclopedia">Diccionarios y Enciclopedias</option>
+                <option value="atlas">Atlas</option>
+            </select>
+        </form>
+        <a href="{{ url_for('books.anadir_libro') }}" class="btn btn-info btn-sm me-2">Añadir Nuevo Libro</a>
+    </div>
+    <div class="card shadow-sm mb-7">
+        <div class="card-header bg-dark text-white text-center fw-bold fs-5">
+            Catálogo de Libros Registrados
+        </div>
+        <div class="card-body">
+            <div class="table-responsive">
+                <table class="table table-striped table-hover" id="librosTable">
+                    <thead>
+                        <tr>
+                            <th scope="col">NumReg</th>
+                            <th scope="col">Título</th>
+                            <th scope="col">Autor Principal</th>
+                            <th scope="col">CDU</th>
+                            <th scope="col">Materia</th>
+                            <th scope="col">LetTítulo</th>
+                            <th scope="col">LetAutor</th>
+                            <th scope="col">Disponible</th>
+                            <th scope="col" class="acciones-columna"></th>
+                        </tr>
+                    </thead>
+                    <tbody id="libros-table-body" class="small">
+                        {% include '_libros_table_rows.html' %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <nav aria-label="Navegación de libros" class="mt-4">
+        <ul class="pagination justify-content-center" id="pagination-controls">
+            {# Aquí se incluye _pagination_controls_books.html que ahora usa data-attributes #}
+            {% include '_pagination_controls_books.html' %}
+        </ul>
+    </nav>
+</div>
+{% endblock %}
+{% block scripts %}
+{{ super() }}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const searchInput = document.getElementById('search-input');
+        const showAllButton = document.getElementById('show-all-button');
+        const librosTableBody = document.getElementById('libros-table-body');
+        const paginationControls = document.getElementById('pagination-controls');
+        const searchForm = document.getElementById('search-form');
+        const sortSelect = document.getElementById('sort-select');
+        const filterMaterialTypeSelect = document.getElementById('filter-material-type-select');
+
+        let debounceTimeout;
+
+        // FUNCIÓN CENTRALIZADA PARA REALIZAR LA BÚSQUEDA/PAGINACIÓN/ORDENACIÓN/FILTRADO
+        const performSearch = async (query = searchInput.value, page = 1, sortBy = '', sortDirection = '', filterMaterialType = '') => {
+            console.log(`performSearch: Iniciando búsqueda con: q='${query}', page=${page}, sort_by='${sortBy}', sort_direction='${sortDirection}', filter_material_type='${filterMaterialType}'`);
+            clearTimeout(debounceTimeout); // Limpiar cualquier debounce previo
+
+            // Usar un debounce para evitar múltiples peticiones rápidas
+            debounceTimeout = setTimeout(async () => {
+                // Construimos la URL con todos los parámetros
+                const params = new URLSearchParams();
+                params.append('q', query);
+                params.append('page', page);
+                if (sortBy) {
+                    params.append('sort_by', sortBy);
+                    params.append('sort_direction', sortDirection);
+                }
+                if (filterMaterialType) {
+                    params.append('filter_material_type', filterMaterialType);
+                }
+
+                const url = `{{ url_for('books.listar_libros_ajax') }}?${params.toString()}`;
+                console.log(`performSearch: Lanzando fetch a URL: ${url}`);
+
+                try {
+                    const response = await fetch(url);
+                    console.log(`performSearch: Respuesta HTTP recibida. Status: ${response.status}`);
+                    if (!response.ok) {
+                        const errorText = await response.text();
+                        throw new Error(`Error HTTP! Estado: ${response.status} ${response.statusText} - ${errorText}`);
+                    }
+                    const data = await response.json();
+                    console.log("performSearch: Datos JSON recibidos:", data);
+
+                    librosTableBody.innerHTML = data.table_rows;
+                    paginationControls.innerHTML = data.pagination_html;
+
+                    // Asegurarse de que los selects reflejen el estado actual
+                    updateSortSelect(sortBy, sortDirection);
+                    updateFilterMaterialTypeSelect(filterMaterialType);
+
+                } catch (error) {
+                    console.error('performSearch: Error en la petición o procesamiento:', error);
+                    librosTableBody.innerHTML = '<tr><td colspan="9" class="text-center text-danger">Error al cargar los libros. Revisa la consola para más detalles.</td></tr>';
+                    paginationControls.innerHTML = '';
+                }
+            }, 300); // Debounce de 300ms
+        };
+
+        // --- Event Listeners ---
+
+        // Event listener para el input de búsqueda (se dispara al escribir)
+        searchInput.addEventListener('input', function() {
+            console.log("Evento 'input' en searchInput.");
+            const [sortBy, sortDirection] = getSortParamsFromSelect();
+            const filterMaterialType = getFilterMaterialTypeParamsFromSelect();
+            performSearch(searchInput.value, 1, sortBy, sortDirection, filterMaterialType);
+        });
+
+        // Event listener para el botón "Mostrar todos"
+        showAllButton.addEventListener('click', function() {
+            console.log("Evento 'click' en showAllButton.");
+            searchInput.value = ''; // Limpiar input de búsqueda
+            sortSelect.value = ''; // Resetear select de ordenación a la opción por defecto
+            filterMaterialTypeSelect.value = ''; // Resetear select de filtro a la opción por defecto
+
+            // Disparar búsqueda con los valores reseteados
+            const [sortBy, sortDirection] = getSortParamsFromSelect();
+            const filterMaterialType = getFilterMaterialTypeParamsFromSelect();
+            performSearch('', 1, sortBy, sortDirection, filterMaterialType);
+        });
+
+        // Listener para evitar el envío normal del formulario al presionar Enter
+        searchForm.addEventListener('submit', function(event) {
+            console.log("Evento 'submit' en searchForm.");
+            event.preventDefault(); // Prevenir el envío por defecto del formulario
+            const [sortBy, sortDirection] = getSortParamsFromSelect();
+            const filterMaterialType = getFilterMaterialTypeParamsFromSelect();
+            performSearch(searchInput.value, 1, sortBy, sortDirection, filterMaterialType);
+        });
+
+        // Event listener para el cambio en el select de ordenación
+        sortSelect.addEventListener('change', function() {
+            console.log("Evento 'change' en sortSelect.");
+            const [sortBy, sortDirection] = getSortParamsFromSelect();
+            const filterMaterialType = getFilterMaterialTypeParamsFromSelect();
+            performSearch(searchInput.value, 1, sortBy, sortDirection, filterMaterialType);
+        });
+
+        // Event listener para el cambio en el select de filtro por tipo de material
+        filterMaterialTypeSelect.addEventListener('change', function() {
+            console.log("Evento 'change' en filterMaterialTypeSelect.");
+            const [sortBy, sortDirection] = getSortParamsFromSelect();
+            const filterMaterialType = getFilterMaterialTypeParamsFromSelect();
+            performSearch(searchInput.value, 1, sortBy, sortDirection, filterMaterialType); // Reiniciamos la página a 1
+        });
+
+        // Modificamos el listener de paginación para que incluya los parámetros de ordenación y tipo de material
+        if (paginationControls) {
+            paginationControls.addEventListener('click', function(event) {
+                console.log("Evento 'click' en paginationControls.");
+                const pageLink = event.target.closest('a.page-link');
+
+                if (pageLink && !pageLink.parentElement.classList.contains('disabled')) {
+                    event.preventDefault(); // Prevenir navegación por defecto
+
+                    // LECTURA DE PARAMETROS DESDE data-attributes
+                    const page = parseInt(pageLink.dataset.page) || 1;
+                    const query = pageLink.dataset.q || '';
+                    const sortBy = pageLink.dataset.sortBy || '';
+                    const sortDirection = pageLink.dataset.sortDirection || '';
+                    const filterMaterialType = pageLink.dataset.filterMaterialType || '';
+
+                    console.log(`Pagination click - Leyendo data-attributes: page=${page}, q='${query}', sortBy='${sortBy}', sortDirection='${sortDirection}', filterMaterialType='${filterMaterialType}'`);
+
+                    // Actualizar los inputs y selects para que reflejen el estado de la paginación
+                    searchInput.value = query;
+                    updateSortSelect(sortBy, sortDirection);
+                    updateFilterMaterialTypeSelect(filterMaterialType);
+
+                    performSearch(query, page, sortBy, sortDirection, filterMaterialType);
+                } else {
+                    console.log("Clic en enlace de paginación deshabilitado o no es un enlace válido.");
+                }
+            });
+        }
+
+        // FUNCIÓN: Parsea el valor del select de ordenación
+        function getSortParamsFromSelect() {
+            const selectedValue = sortSelect.value; // Ej: "titulo_asc"
+            let sortBy = '';
+            let sortDirection = '';
+            if (selectedValue) {
+                const parts = selectedValue.split('_');
+                // La última parte es la dirección (asc/desc), el resto es el campo (ej: 'titulo', 'autor_principal')
+                sortDirection = parts[parts.length - 1].toUpperCase();
+                sortBy = parts.slice(0, -1).join('_'); // Reconstruye el nombre del campo si es compuesto
+            }
+            console.log(`getSortParamsFromSelect: sortBy='${sortBy}', sortDirection='${sortDirection}'`);
+            return [sortBy, sortDirection];
+        }
+
+        // FUNCIÓN: Actualiza el valor seleccionado del select de ordenación
+        function updateSortSelect(sortBy, sortDirection) {
+            if (sortSelect) {
+                if (sortBy && sortDirection) {
+                    const valueToSelect = `${sortBy}_${sortDirection.toLowerCase()}`;
+                    sortSelect.value = valueToSelect;
+                    console.log(`updateSortSelect: Estableciendo sortSelect.value a '${valueToSelect}'`);
+                } else {
+                    sortSelect.value = ''; // Si no hay ordenación, selecciona la opción por defecto (vacía)
+                    console.log("updateSortSelect: Estableciendo sortSelect.value a '' (por defecto).");
+                }
+            }
+        }
+
+        // FUNCIÓN: Obtiene el valor del select de tipo de material
+        function getFilterMaterialTypeParamsFromSelect() {
+            const filterValue = filterMaterialTypeSelect ? filterMaterialTypeSelect.value : '';
+            console.log(`getFilterMaterialTypeParamsFromSelect: filterValue='${filterValue}'`);
+            return filterValue;
+        }
+
+        // FUNCIÓN: Actualiza el valor seleccionado del select de tipo de material
+        function updateFilterMaterialTypeSelect(filterMaterialType) {
+            if (filterMaterialTypeSelect) {
+                filterMaterialTypeSelect.value = filterMaterialType;
+                console.log(`updateFilterMaterialTypeSelect: Estableciendo filterMaterialTypeSelect.value a '${filterMaterialType}'`);
+            }
+        }
+
+        // Carga Inicial de Libros al cargar la página
+        // Inicializa el estado de los inputs/selects con los valores que vinieron de Flask en la primera carga
+        searchInput.value = "{{ q | default('') }}"; // Usar el valor de Jinja directamente para la carga inicial
+        updateSortSelect("{{ sort_by | default('') }}", "{{ sort_direction | default('') }}");
+        updateFilterMaterialTypeSelect("{{ filter_material_type | default('') }}");
+
+        performSearch(
+            "{{ q | default('') }}",
+            parseInt("{{ page | default(1) }}"),
+            "{{ sort_by | default('') }}",
+            "{{ sort_direction | default('') }}",
+            "{{ filter_material_type | default('') }}"
+        );
+    });
+</script>
+{% endblock %}

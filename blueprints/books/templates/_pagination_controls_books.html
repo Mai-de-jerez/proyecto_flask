@@ -1,0 +1,80 @@
+{# _pagination_controls_books.html #}
+{% set q = q | default('') %}
+{% set sort_by = sort_by | default('') %}
+{% set sort_direction = sort_direction | default('') %}
+{% set filter_material_type = filter_material_type | default('') %}
+{# base_ajax_url se pasa desde el controlador, por ejemplo 'books.listar_libros_ajax' #}
+
+{# Botón 'Anterior' #}
+<li class="page-item {% if page == 1 %}disabled{% endif %}">
+    <a class="page-link" href="#"
+       data-page="{{ page - 1 }}"
+       data-q="{{ q }}"
+       data-sort-by="{{ sort_by }}"
+       data-sort-direction="{{ sort_direction }}"
+       data-filter-material-type="{{ filter_material_type }}"
+       aria-label="Anterior">
+        <span aria-hidden="true">&laquo;</span>
+    </a>
+</li>
+
+{# Lógica para calcular el rango de páginas a mostrar (ej. 1 ... 4 5 [6] 7 8 ... 10) #}
+{% set range_start = page - 2 %}
+{% set range_end = page + 2 %}
+{% if range_start < 1 %}{% set range_start = 1 %}{% endif %}
+{% if range_end > total_pages %}{% set range_end = total_pages %}{% endif %}
+
+{# Enlace a la primera página si no está en el rango visible #}
+{% if range_start > 1 %}
+    <li class="page-item">
+        <a class="page-link" href="#"
+           data-page="1"
+           data-q="{{ q }}"
+           data-sort-by="{{ sort_by }}"
+           data-sort-direction="{{ sort_direction }}"
+           data-filter-material-type="{{ filter_material_type }}"
+        >1</a>
+    </li>
+    {% if range_start > 2 %}<li class="page-item disabled"><span class="page-link">...</span></li>{% endif %}
+{% endif %}
+
+{# Renderizar los números de página en el rango visible #}
+{% for p_num in range(range_start, range_end + 1) %}
+    <li class="page-item {% if p_num == page %}active{% endif %}">
+        <a class="page-link" href="#"
+           data-page="{{ p_num }}"
+           data-q="{{ q }}"
+           data-sort-by="{{ sort_by }}"
+           data-sort-direction="{{ sort_direction }}"
+           data-filter-material-type="{{ filter_material_type }}"
+        >{{ p_num }}</a>
+    </li>
+{% endfor %}
+
+{% if range_end < total_pages %}
+    {% if range_end < total_pages - 1 %}<li class="page-item disabled"><span class="page-link">...</span></li>{% endif %}
+    <li class="page-item">
+        <a class="page-link" href="#"
+           data-page="{{ total_pages }}"
+           data-q="{{ q }}"
+           data-sort-by="{{ sort_by }}"
+           data-sort-direction="{{ sort_direction }}"
+           data-filter-material-type="{{ filter_material_type }}"
+        >
+            {{ total_pages }}
+        </a>
+    </li>
+{% endif %}
+
+{# Botón 'Siguiente' #}
+<li class="page-item {% if page == total_pages or total_pages == 0 %}disabled{% endif %}">
+    <a class="page-link" href="#"
+       data-page="{{ page + 1 }}"
+       data-q="{{ q }}"
+       data-sort-by="{{ sort_by }}"
+       data-sort-direction="{{ sort_direction }}"
+       data-filter-material-type="{{ filter_material_type }}"
+       aria-label="Siguiente">
+        <span aria-hidden="true">&raquo;</span>
+    </a>
+</li>

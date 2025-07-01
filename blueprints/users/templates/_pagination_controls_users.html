@@ -1,0 +1,77 @@
+{# _pagination_controls_users.html #}
+{# Usamos set para asegurar que las variables tienen un valor por defecto si no vienen definidas #}
+{% set q = q | default('') %}
+{% set sort_by = sort_by | default('id') %} {# Valor por defecto para sort_by #}
+{% set sort_direction = sort_direction | default('ASC') %} {# Valor por defecto para sort_direction #}
+
+
+{# Botón "Anterior" #}
+<li class="page-item {% if page == 1 %}disabled{% endif %}">
+    <a class="page-link" href="#"
+       data-page="{{ page - 1 }}"
+       data-q="{{ q }}"
+       data-sort-by="{{ sort_by }}"
+       data-sort-direction="{{ sort_direction }}"
+       aria-label="Anterior">
+        <span aria-hidden="true">&laquo;</span>
+    </a>
+</li>
+
+{# Enlaces a los números de página #}
+{% set range_start = page - 2 %}
+{% set range_end = page + 2 %}
+{% if range_start < 1 %}{% set range_start = 1 %}{% endif %}
+{% if range_end > total_pages %}{% set range_end = total_pages %}{% endif %}
+
+{# Enlace a la primera página si no está en el rango visible #}
+{% if range_start > 1 %}
+    <li class="page-item">
+        <a class="page-link" href="#"
+           data-page="1"
+           data-q="{{ q }}"
+           data-sort-by="{{ sort_by }}"
+           data-sort-direction="{{ sort_direction }}"
+        >1</a>
+    </li>
+    {% if range_start > 2 %}<li class="page-item disabled"><span class="page-link">...</span></li>{% endif %}
+{% endif %}
+
+{# Renderizar los números de página en el rango visible #}
+{% for p in range(range_start, range_end + 1) %}
+    <li class="page-item {% if p == page %}active{% endif %}">
+        <a class="page-link" href="#"
+           data-page="{{ p }}"
+           data-q="{{ q }}"
+           data-sort-by="{{ sort_by }}"
+           data-sort-direction="{{ sort_direction }}"
+        >{{ p }}</a>
+    </li>
+{% endfor %}
+
+{# Enlace a la última página si no está en el rango visible #}
+{% if range_end < total_pages %}
+    {% if range_end < total_pages - 1 %}<li class="page-item disabled"><span class="page-link">...</span></li>{% endif %}
+    <li class="page-item">
+        <a class="page-link" href="#"
+           data-page="{{ total_pages }}"
+           data-q="{{ q }}"
+           data-sort-by="{{ sort_by }}"
+           data-sort-direction="{{ sort_direction }}"
+        >
+            {{ total_pages }}
+        </a>
+    </li>
+{% endif %}
+
+
+{# Botón "Siguiente" #}
+<li class="page-item {% if page == total_pages or total_pages == 0 %}disabled{% endif %}">
+    <a class="page-link" href="#"
+       data-page="{{ page + 1 }}"
+       data-q="{{ q }}"
+       data-sort-by="{{ sort_by }}"
+       data-sort-direction="{{ sort_direction }}"
+       aria-label="Siguiente">
+        <span aria-hidden="true">&raquo;</span>
+    </a>
+</li>

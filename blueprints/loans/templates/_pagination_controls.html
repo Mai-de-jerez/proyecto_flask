@@ -1,0 +1,103 @@
+{# blueprints/loans/templates/_pagination_controls.html #}
+{# Esta plantilla se usa para renderizar los controles de paginación. #}
+{# Recibe las variables 'page', 'total_pages', 'q', 'filter_status', 'sort_by', 'sort_direction'. #}
+
+{# Botón 'Anterior' #}
+<li class="page-item {% if page == 1 %}disabled{% endif %}">
+    <a class="page-link"
+       href="{{ url_for('loans.listar_prestamos_ajax',
+                        q=q,
+                        page=page - 1,
+                        filter_status=filter_status,
+                        sort_by=sort_by,
+                        sort_direction=sort_direction) }}"
+       aria-label="Anterior"
+       data-page="{{ page - 1 }}"
+       data-q="{{ q | default('') }}"
+       data-filter-status="{{ filter_status | default('') }}"
+       data-sort-by="{{ sort_by | default('') }}"
+       data-sort-direction="{{ sort_direction | default('') }}">
+        <span aria-hidden="true">&laquo;</span>
+    </a>
+</li>
+
+{# Números de página #}
+{# Mostrar un rango de páginas alrededor de la actual #}
+{% set range_start = page - 2 %}
+{% set range_end = page + 2 %}
+
+{# Asegurarse de que el rango no se salga de los límites #}
+{% if range_start < 1 %}{% set range_start = 1 %}{% endif %}
+{% if range_end > total_pages %}{% set range_end = total_pages %}{% endif %}
+
+{# Enlace a la primera página si no está en el rango visible #}
+{% if range_start > 1 %}
+    <li class="page-item"><a class="page-link"
+           href="{{ url_for('loans.listar_prestamos_ajax',
+                            q=q,
+                            page=1,
+                            filter_status=filter_status,
+                            sort_by=sort_by,
+                            sort_direction=sort_direction) }}"
+           data-page="1"
+           data-q="{{ q | default('') }}"
+           data-filter-status="{{ filter_status | default('') }}"
+           data-sort-by="{{ sort_by | default('') }}"
+           data-sort-direction="{{ sort_direction | default('') }}">1</a></li>
+    {% if range_start > 2 %}<li class="page-item disabled"><span class="page-link">...</span></li>{% endif %}
+{% endif %}
+
+{# Renderizar las páginas en el rango visible #}
+{% for p_num in range(range_start, range_end + 1) %}
+    <li class="page-item {% if p_num == page %}active{% endif %}">
+        {# Todos los enlaces de paginación deben apuntar a la ruta AJAX #}
+        <a class="page-link"
+           href="{{ url_for('loans.listar_prestamos_ajax',
+                            q=q,
+                            page=p_num,
+                            filter_status=filter_status,
+                            sort_by=sort_by,
+                            sort_direction=sort_direction) }}"
+           data-page="{{ p_num }}"
+           data-q="{{ q | default('') }}"
+           data-filter-status="{{ filter_status | default('') }}"
+           data-sort-by="{{ sort_by | default('') }}"
+           data-sort-direction="{{ sort_direction | default('') }}">{{ p_num }}</a>
+    </li>
+{% endfor %}
+
+{# Enlace a la última página si no está en el rango visible #}
+{% if range_end < total_pages %}
+    {% if range_end < total_pages - 1 %}<li class="page-item disabled"><span class="page-link">...</span></li>{% endif %}
+    <li class="page-item"><a class="page-link"
+           href="{{ url_for('loans.listar_prestamos_ajax',
+                            q=q,
+                            page=total_pages,
+                            filter_status=filter_status,
+                            sort_by=sort_by,
+                            sort_direction=sort_direction) }}"
+           data-page="{{ total_pages }}"
+           data-q="{{ q | default('') }}"
+           data-filter-status="{{ filter_status | default('') }}"
+           data-sort-by="{{ sort_by | default('') }}"
+           data-sort-direction="{{ sort_direction | default('') }}">{{ total_pages }}</a></li>
+{% endif %}
+
+{# Botón 'Siguiente' #}
+<li class="page-item {% if page == total_pages or total_pages == 0 %}disabled{% endif %}">
+    <a class="page-link"
+       href="{{ url_for('loans.listar_prestamos_ajax',
+                        q=q,
+                        page=page + 1,
+                        filter_status=filter_status,
+                        sort_by=sort_by,
+                        sort_direction=sort_direction) }}"
+       aria-label="Siguiente"
+       data-page="{{ page + 1 }}"
+       data-q="{{ q | default('') }}"
+       data-filter-status="{{ filter_status | default('') }}"
+       data-sort-by="{{ sort_by | default('') }}"
+       data-sort-direction="{{ sort_direction | default('') }}">
+        <span aria-hidden="true">&raquo;</span>
+    </a>
+</li>

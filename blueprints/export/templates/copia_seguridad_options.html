@@ -1,0 +1,197 @@
+{# copia_seguridad_options.html #}
+{% extends "base.html" %}
+
+{% block title %}Opciones de Copia de Seguridad{% endblock %}
+
+{% block content %}
+
+<div class="container mt-4 p-4 bg-dark rounded-3 shadow-lg">
+    <h2 class="text-white rounded-2 d-inline-block mb-4">Copia de Seguridad de la Base de Datos</h2>
+
+    {# Sección de Crear Copia de Seguridad #}
+    <div class="card bg-secondary text-white mb-5">
+        <div class="card-header bg-primary text-white">
+            <h4 class="mb-0">Crear una Nueva Copia de Seguridad</h4>
+        </div>
+        <div class="card-body">
+            <p class="card-text mb-3">Haz clic en el botón para crear una copia de seguridad de la base de datos `biblioteca.db`. Se mantendrán las últimas 3 copias de seguridad en la carpeta `C:/biblioteca_data/copias_seguridad/`.</p>
+            <form method="POST" action="{{ url_for('export.crear_copia_seguridad') }}" id="create_backup_form">
+                <button type="submit" class="btn btn-primary btn-lg">
+                    <i class="fas fa-save"></i> Crear Copia de Seguridad
+                </button>
+            </form>
+            <div id="create_backup_message" class="mt-4 d-none p-3 rounded-2"></div>
+        </div>
+    </div>
+
+    {# Sección de Restaurar Copia de Seguridad #}
+    <div class="card bg-secondary text-white mt-5">
+        <div class="card-header bg-danger text-white">
+            <h4 class="mb-0">Restaurar una Copia de Seguridad (¡ATENCIÓN!)</h4>
+        </div>
+        <div class="card-body">
+            <p class="card-text mb-3">
+                Selecciona una copia de seguridad existente de la lista para restaurar la base de datos principal.
+            </p>
+            <div class="mb-3">
+                <label for="backupSelect" class="form-label">Seleccionar Copia de Seguridad:</label>
+                <select class="form-select" id="backupSelect" required>
+                    <option value="">Cargando copias...</option> {# Mensaje inicial #}
+                </select>
+                {# Mensaje actualizado con la nueva ruta de copias de seguridad #}
+                <div class="form-text text-light">Las copias se encuentran en `C:/biblioteca_data/copias_seguridad/`</div>
+            </div>
+            <button type="button" class="btn btn-success btn-lg" id="restoreSelectedBackupBtn" disabled>
+                <i class="fas fa-undo"></i> Restaurar Copia Seleccionada
+            </button>
+            {# Div para mostrar mensajes de restauración #}
+            <div id="restore_backup_message" class="mt-4 d-none p-3 rounded-2"></div>
+        </div>
+    </div>
+
+</div>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // --- Lógica para Crear Copia de Seguridad ---
+        const createBackupForm = document.getElementById('create_backup_form');
+        const createBackupMessageDiv = document.getElementById('create_backup_message');
+
+        createBackupForm.addEventListener('submit', function(event) {
+            event.preventDefault(); // Evitar el envío de formulario tradicional
+
+            // Mostrar mensaje de carga
+            createBackupMessageDiv.classList.remove('d-none', 'bg-success', 'bg-danger');
+            createBackupMessageDiv.classList.add('bg-info', 'text-white'); // Usar bg-info para carga
+            createBackupMessageDiv.textContent = 'Creando copia de seguridad... Esto puede tardar un momento.';
+
+            fetch(createBackupForm.action, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/x-www-form-urlencoded', // Necesario para envíos de formulario POST
+                }
+            })
+            .then(response => {
+                if (response.ok) {
+                    return response.text(); // La respuesta es un texto simple del backend
+                } else {
+                    // Si hay un error HTTP, obtener el texto del error
+                    return response.text().then(text => { throw new Error(text); });
+                }
+            })
+            .then(message => {
+                // Mostrar mensaje de éxito
+                createBackupMessageDiv.classList.remove('bg-info');
+                createBackupMessageDiv.classList.add('bg-success', 'text-white');
+                createBackupMessageDiv.textContent = message;
+                // CAMBIO: Recarga la lista de copias disponibles después de crear una nueva
+                loadAvailableBackups();
+            })
+            .catch(error => {
+                // Mostrar mensaje de error
+                createBackupMessageDiv.classList.remove('bg-info');
+                createBackupMessageDiv.classList.add('bg-danger', 'text-white');
+                createBackupMessageDiv.textContent = `Error: ${error.message || 'Error desconocido al crear la copia de seguridad.'}`;
+                console.error('Error al crear copia de seguridad:', error);
+            });
+        });
+
+        // --- Lógica para Restaurar Copia de Seguridad ---
+        const backupSelect = document.getElementById('backupSelect');
+        const restoreSelectedBackupBtn = document.getElementById('restoreSelectedBackupBtn');
+        const restoreBackupMessageDiv = document.getElementById('restore_backup_message');
+
+        // Función para cargar las copias de seguridad disponibles desde el backend
+        async function loadAvailableBackups() {
+            backupSelect.innerHTML = '<option value="">Cargando copias...</option>';
+            restoreSelectedBackupBtn.disabled = true; // Deshabilita el botón mientras carga
+            restoreBackupMessageDiv.classList.add('d-none'); // Oculta mensajes anteriores
+            restoreBackupMessageDiv.innerHTML = ''; // Limpia el contenido del mensaje
+            restoreBackupMessageDiv.classList.remove('bg-success', 'bg-danger', 'bg-info', 'bg-warning', 'text-dark', 'text-white'); // Limpia clases de color
+
+            try {
+                const response = await fetch("{{ url_for('export.get_available_backups') }}");
+                if (!response.ok) {
+                    throw new Error(`Error HTTP! Estado: ${response.status}`);
+                }
+                const backups = await response.json();
+
+                backupSelect.innerHTML = '';
+
+                if (backups.length === 0) {
+                    backupSelect.innerHTML = '<option value="">No hay copias de seguridad disponibles.</option>';
+                    restoreSelectedBackupBtn.disabled = true;
+                } else {
+                    backupSelect.innerHTML = '<option value="">-- Selecciona una copia --</option>';
+                    backups.forEach(backup => {
+                        const option = document.createElement('option');
+                        option.value = backup;
+                        option.textContent = backup;
+                        backupSelect.appendChild(option);
+                    });
+                    restoreSelectedBackupBtn.disabled = false;
+                }
+            } catch (error) {
+                console.error('Error al cargar copias de seguridad:', error);
+                backupSelect.innerHTML = '<option value="">Error al cargar copias.</option>';
+                restoreSelectedBackupBtn.disabled = true;
+                restoreBackupMessageDiv.classList.remove('d-none');
+                restoreBackupMessageDiv.classList.add('bg-danger', 'text-white');
+                restoreBackupMessageDiv.innerHTML = `<strong>Error:</strong> No se pudieron cargar las copias de seguridad. ${error.message || 'Error desconocido.'}`;
+            }
+        }
+
+        // Evento para el botón de restauración (al hacer clic)
+        restoreSelectedBackupBtn.addEventListener('click', async function() {
+            const selectedBackup = backupSelect.value;
+
+            // Limpiar y preparar el div de mensajes
+            restoreBackupMessageDiv.classList.remove('d-none', 'bg-success', 'bg-danger', 'bg-warning', 'text-dark', 'text-white');
+            restoreBackupMessageDiv.innerHTML = ''; // Limpiar contenido
+
+            if (!selectedBackup) {
+                restoreBackupMessageDiv.classList.add('bg-danger', 'text-white');
+                restoreBackupMessageDiv.innerHTML = '<strong>Error:</strong> Por favor, selecciona una copia de seguridad para restaurar.';
+                return;
+            }
+
+            restoreBackupMessageDiv.classList.add('bg-info', 'text-white');
+            restoreBackupMessageDiv.innerHTML = 'Intentando restaurar la base de datos... Esto puede tardar unos segundos.';
+
+            try {
+                const formData = new URLSearchParams();
+                formData.append('backup_filename', selectedBackup);
+
+                const response = await fetch("{{ url_for('export.restaurar_copia_seguridad') }}", {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/x-www-form-urlencoded',
+                    },
+                    body: formData
+                });
+
+                const message = await response.text(); // Obtiene el mensaje de texto del backend
+
+                if (response.ok) {
+                    restoreBackupMessageDiv.classList.remove('bg-info');
+                    restoreBackupMessageDiv.classList.add('bg-success', 'text-white'); // Éxito: Fondo verde
+                    restoreBackupMessageDiv.innerHTML = message;
+                } else {
+                    // Si el backend devuelve un error (status 4xx o 5xx)
+                    restoreBackupMessageDiv.classList.remove('bg-info');
+                    restoreBackupMessageDiv.classList.add('bg-danger', 'text-white'); // Error: Fondo rojo
+                    restoreBackupMessageDiv.innerHTML = `<strong>Error:</strong> ${message}`; // Muestra el mensaje de error del backend
+                }
+            } catch (error) {
+                // Este catch solo se activaría si la petición fetch en sí falla (ej. error de red)
+                restoreBackupMessageDiv.classList.remove('bg-info', 'bg-success');
+                restoreBackupMessageDiv.classList.add('bg-danger', 'text-white');
+                restoreBackupMessageDiv.innerHTML = `<strong>Error de red:</strong> No se pudo conectar con el servidor. ${error.message || 'Error desconocido.'}`;
+            }
+        });
+
+        // Cargar las copias de seguridad al cargar la página por primera vez
+        loadAvailableBackups();
+    });
+</script>
+{% endblock %}

@@ -1,0 +1,242 @@
+{# users_list.html #}
+{% extends 'base.html' %}
+{% block title %}Lista de Usuarios{% endblock %}
+
+{% block content %}
+<div class="container-fluid mt-3 mb-5">
+    {# INICIO: BARRA DE FILTRO Y ORDENACIÓN ESTILO BOOKS_LIST.HTML #}
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <form class="d-flex" id="search-form-general" action="{{ url_for('users.listar_usuarios') }}" method="GET">
+            {# BUSCADOR #}
+            <input class="form-control me-2 search-input" type="search" placeholder="Buscar usuario..." aria-label="Search" name="q" id="search-input-general" value="">
+            <button class="btn btn-outline-secondary search-button" type="button" id="show-all-button-general">Mostrar todos</button>
+
+            {# --- CONTROL DE ORDENACIÓN (SELECT) --- #}
+            <select class="form-select ms-2" id="sort-select" name="sort_by" aria-label="Ordenar por">
+                <option value="">Ordenar por...</option> {# Opción por defecto para que el JS la gestione #}
+                <option value="id_asc">ID (Asc)</option>
+                <option value="id_desc">ID (Desc)</option>
+                <option value="apellidos_asc">Apellidos (A-Z)</option>
+                <option value="apellidos_desc">Apellidos (Z-A)</option>
+                <option value="nombre_asc">Nombre (A-Z)</option>
+                <option value="nombre_desc">Nombre (Z-A)</option>
+                <option value="modulo_asc">Módulo (A-Z)</option>
+                <option value="modulo_desc">Módulo (Z-A)</option>
+            </select>
+            {# --- FIN CONTROL DE ORDENACIÓN --- #}
+        </form>
+        <a href="{{ url_for('users.anadir_usuario') }}" class="btn btn-info btn-sm ms-2">Añadir Nuevo Usuario</a>
+    </div>
+    {# FIN: BARRA DE FILTRO Y ORDENACIÓN #}
+
+    <main>
+        <div class="card shadow-sm mb-5">
+            <div class="card-header bg-dark text-white text-center fw-bold fs-5">
+                Listado de Usuarios Registrados
+            </div>
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table class="table table-striped table-hover" id="usersListTable">
+                        <thead>
+                            <tr>
+                                <th>Núm. Socio</th>
+                                <th>Apellidos</th>
+                                <th>Nombre</th>
+                                <th>Módulo</th>
+                                <th>Género</th>
+                                <th>Préstamos Activos</th>
+                                <th class="acciones-columna"></th>
+                            </tr>
+                        </thead>
+                        <tbody class="small" id="users-table-body-general">
+                            {% include '_users_table_rows_general.html' %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <nav aria-label="Navegación de usuarios" class="mt-4">
+            <ul class="pagination justify-content-center" id="pagination-controls-general">
+                {# Este contenido se actualizará vía AJAX #}
+                {% include '_pagination_controls_users.html' %}
+            </ul>
+        </nav>
+    </main>
+</div>
+{% endblock %}
+
+{% block scripts %}
+{{ super() }}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Variables iniciales pasadas desde Flask (usamos los valores del servidor)
+        const initialQuery = "{{ q | default('') }}";
+        const initialPage = parseInt("{{ page | default(1) }}");
+        const initialSortBy = "{{ sort_by | default('id') }}"; // 'id', 'apellidos', 'nombre', 'modulo'
+        const initialSortDirection = "{{ sort_direction | default('ASC') }}";
+
+        const searchInput = document.getElementById('search-input-general');
+        const showAllButton = document.getElementById('show-all-button-general');
+        const usersTableBody = document.getElementById('users-table-body-general');
+        const paginationControls = document.getElementById('pagination-controls-general');
+        const searchForm = document.getElementById('search-form-general');
+        const sortSelect = document.getElementById('sort-select');
+
+        if (!(searchInput && showAllButton && usersTableBody && paginationControls && searchForm && sortSelect)) {
+            console.error("Error: No se pudieron encontrar todos los elementos DOM necesarios. El script de users_list.html podría no funcionar correctamente.");
+            return; // Detener la ejecución si faltan elementos cruciales
+        }
+
+        let debounceTimeout;
+
+        // FUNCIÓN CENTRALIZADA PARA REALIZAR LA BÚSQUEDA/PAGINACIÓN/ORDENACIÓN
+        const performSearch = async (query, page, sortBy, sortDirection) => {
+            console.log(`performSearch (users_list): Iniciando búsqueda con: q='${query}', page=${page}, sort_by='${sortBy}', sort_direction='${sortDirection}'`);
+            clearTimeout(debounceTimeout); // Limpiar cualquier debounce previo
+
+            // Usar un debounce para evitar múltiples peticiones rápidas
+            debounceTimeout = setTimeout(async () => {
+                const params = new URLSearchParams();
+                params.append('q', query);
+                params.append('page', page);
+                if (sortBy) {
+                    params.append('sort_by', sortBy);
+                    params.append('sort_direction', sortDirection);
+                }
+
+                const url = `{{ url_for('users.listar_usuarios_ajax') }}?${params.toString()}`;
+                console.log(`performSearch (users_list): Lanzando fetch a URL: ${url}`);
+
+                try {
+                    const response = await fetch(url);
+                    console.log(`performSearch (users_list): Respuesta HTTP recibida. Status: ${response.status}`);
+                    if (!response.ok) {
+                        const errorText = await response.text(); // Leer el cuerpo de la respuesta para más detalles del error
+                        throw new Error(`Error HTTP! Estado: ${response.status} ${response.statusText} - ${errorText}`);
+                    }
+                    const data = await response.json();
+                    console.log("performSearch (users_list): Datos JSON recibidos:", data);
+
+                    usersTableBody.innerHTML = data.table_rows;
+                    paginationControls.innerHTML = data.pagination_html;
+
+                    // La función updateSortSelect ya se encarga de la lógica de "id_asc" por defecto
+                    updateSortSelect(sortBy, sortDirection);
+                    // Si la búsqueda se hizo con una query específica, actualizar el input
+                    searchInput.value = query;
+
+                } catch (error) {
+                    console.error('performSearch (users_list): Error en la petición o procesamiento:', error);
+                    usersTableBody.innerHTML = '<tr><td colspan="7" class="text-center text-danger">Error al cargar los usuarios. Revisa la consola para más detalles.</td></tr>';
+                    paginationControls.innerHTML = '';
+                }
+            }, 300); // Debounce de 300ms
+        };
+
+        // --- Event Listeners ---
+
+        // Event listener para el input de búsqueda (se dispara al escribir)
+        searchInput.addEventListener('input', function() {
+            console.log("Evento 'input' en searchInput.");
+            const [sortBy, sortDirection] = getSortParamsFromSelect();
+            performSearch(searchInput.value, 1, sortBy, sortDirection); // Siempre volver a la página 1 al buscar
+        });
+
+        // Event listener para el botón "Mostrar todos"
+        showAllButton.addEventListener('click', function() {
+            console.log("Evento 'click' en showAllButton.");
+            searchInput.value = ''; // Limpiar input de búsqueda
+            sortSelect.value = ''; // Resetea a la opción vacía "Ordenar por..."
+            const [sortBy, sortDirection] = getSortParamsFromSelect(); // Esto obtendrá 'id' y 'ASC' por defecto
+            performSearch('', 1, sortBy, sortDirection);
+        });
+
+        // Listener para evitar el envío normal del formulario al presionar Enter
+        searchForm.addEventListener('submit', function(event) {
+            console.log("Evento 'submit' en searchForm.");
+            event.preventDefault(); // Prevenir el envío por defecto del formulario
+            const [sortBy, sortDirection] = getSortParamsFromSelect();
+            performSearch(searchInput.value, 1, sortBy, sortDirection);
+        });
+
+        // Event listener para el cambio en el select de ordenación
+        sortSelect.addEventListener('change', function() {
+            console.log("Evento 'change' en sortSelect.");
+            const [sortBy, sortDirection] = getSortParamsFromSelect();
+            performSearch(searchInput.value, 1, sortBy, sortDirection);
+        });
+
+        // Modificamos el listener de paginación para que incluya los parámetros de ordenación
+        paginationControls.addEventListener('click', function(event) {
+            console.log("Evento 'click' en paginationControls.");
+            const pageLink = event.target.closest('a.page-link');
+
+            // Asegurarse de que el clic fue en un enlace de paginación y que no está deshabilitado
+            if (pageLink && !pageLink.parentElement.classList.contains('disabled')) {
+                event.preventDefault();
+                // Estos data-attributes deben ser generados por _pagination_controls_users.html
+                const page = parseInt(pageLink.dataset.page) || 1;
+                const query = pageLink.dataset.q || '';
+                const sortBy = pageLink.dataset.sortBy || ''; // Leer desde data-attribute
+                const sortDirection = pageLink.dataset.sortDirection || ''; // Leer desde data-attribute
+
+                console.log(`Pagination click - Leyendo data-attributes: page=${page}, q='${query}', sortBy='${sortBy}', sortDirection='${sortDirection}'`);
+
+                // Actualizar el input de búsqueda y el select de ordenación para que reflejen el estado
+                searchInput.value = query;
+                updateSortSelect(sortBy, sortDirection); // Asegura que el select visualiza el valor correcto
+
+                performSearch(query, page, sortBy, sortDirection);
+            } else {
+                console.log("Clic en enlace de paginación deshabilitado o no es un enlace válido.");
+            }
+        });
+
+        // FUNCIÓN: Parsea el valor del select para obtener sort_by y sort_direction
+        function getSortParamsFromSelect() {
+            const selectedValue = sortSelect.value; // e.g., "apellidos_asc" o ""
+            let sortBy = '';
+            let sortDirection = '';
+            if (selectedValue) {
+                const parts = selectedValue.split('_');
+                sortDirection = parts[parts.length - 1].toUpperCase();
+                sortBy = parts.slice(0, -1).join('_'); // Reconstruye el nombre del campo
+            } else {
+                // Si el valor es vacío (opción "Ordenar por..."), usar los valores por defecto del backend.
+                // Estos por defecto deben coincidir con los de user_service.py ('id' y 'ASC').
+                sortBy = initialSortBy;
+                sortDirection = initialSortDirection;
+            }
+            console.log(`getSortParamsFromSelect: sortBy='${sortBy}', sortDirection='${sortDirection}'`);
+            return [sortBy, sortDirection];
+        }
+
+        // FUNCIÓN: Actualiza el valor seleccionado del select de ordenación
+        function updateSortSelect(sortBy, sortDirection) {
+            if (sortSelect) {
+                if (sortBy && sortDirection) {
+                    const valueToSelect = `${sortBy}_${sortDirection.toLowerCase()}`;
+                    // Solo actualiza si la opción existe, para evitar resetear si el valor no es válido
+                    if (Array.from(sortSelect.options).some(option => option.value === valueToSelect)) {
+                         sortSelect.value = valueToSelect;
+                         console.log(`updateSortSelect: Estableciendo sortSelect.value a '${valueToSelect}'`);
+                    } else {
+                         // Fallback si la combinación sortBy_sortDirection no existe como opción
+                         sortSelect.value = '';
+                    }
+                } else {
+                    // Si no hay ordenación específica (ej. al resetear), se selecciona la opción por defecto vacía.
+                    sortSelect.value = '';
+                }
+            }
+        }
+
+        // Carga Inicial de Usuarios al cargar la página
+        // Inicializa el estado de los inputs/selects con los valores que vinieron de Flask en la primera carga
+        searchInput.value = initialQuery;
+        updateSortSelect(initialSortBy, initialSortDirection);
+        performSearch(initialQuery, initialPage, initialSortBy, initialSortDirection);
+    });
+</script>
+{% endblock %}

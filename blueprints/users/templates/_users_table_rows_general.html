@@ -1,0 +1,60 @@
+{# _users_table_rows_general.html #}
+{#
+Esta plantilla recibe:
+- users: Lista de objetos de usuario
+- q: Término de búsqueda actual
+- page: Número de página actual
+- sort_by: Campo de ordenación actual
+- sort_direction: Dirección de ordenación actual
+- base_listing_endpoint: Endpoint base al que se debe regresar (ej. 'users.listar_usuarios')
+#}
+
+{# Asegurar que las variables de contexto están definidas para evitar errores #}
+{% set q = q | default('') %}
+{% set page = page | default(1) %}
+{% set sort_by = sort_by | default('id') %}
+{% set sort_direction = sort_direction | default('ASC') %}
+{% set base_listing_endpoint = base_listing_endpoint | default('users.listar_usuarios') %} {# Este es el endpoint principal para esta vista #}
+
+
+{% for user in users %}
+<tr>
+    <td>{{ user.id }}</td>
+    <td>{{ user.apellidos }}</td>
+    <td>{{ user.nombre }}</td>
+    <td>{{ user.nombre_modulo if user.nombre_modulo else 'N/A' }}</td>
+    <td>{{ user.genero if user.genero else 'N/A' }}</td>
+    <td>{{ user.prestamos_activos }}</td>
+    <td>
+
+        {# Creamos una lista de pares clave-valor que no estén vacíos.
+           Usamos 'set _ =' para ejecutar 'append' sin imprimir nada. #}
+        {% set filtered_params_list = [] %}
+        {% if q %}{% set _ = filtered_params_list.append(('q', q)) %}{% endif %}
+        {% if page %}{% set _ = filtered_params_list.append(('page', page)) %}{% endif %}
+        {% if sort_by %}{% set _ = filtered_params_list.append(('sort_by', sort_by)) %}{% endif %}
+        {% if sort_direction %}{% set _ = filtered_params_list.append(('sort_direction', sort_direction)) %}{% endif %}
+
+        {# Convertimos la lista de pares a un diccionario. #}
+        {% set cleaned_params = dict(filtered_params_list) %}
+
+        {# Pasamos los parámetros del diccionario 'cleaned_params' EXPLÍCITAMENTE a url_for.
+           Esto evita el error de sintaxis con el operador '**' en este contexto de Jinja.
+           También, cambiamos 'true' a 'True' (booleano Python) para mayor compatibilidad. #}
+        {% set next_url = url_for(base_listing_endpoint,
+                                  q=cleaned_params.get('q'),
+                                  page=cleaned_params.get('page'),
+                                  sort_by=cleaned_params.get('sort_by'),
+                                  sort_direction=cleaned_params.get('sort_direction'),
+                                  _external=True) %}
+
+        {# La ruta users.ver_ficha_usuario espera un parámetro llamado 'next' para saber a dónde volver. #}
+        <a href="{{ url_for('users.ver_ficha_usuario', user_id=user.id, next=next_url) }}" class="btn btn-info btn-sm">Ver Ficha</a>
+
+    </td>
+</tr>
+{% else %}
+<tr>
+    <td colspan="7" class="text-center">No se encontraron usuarios.</td>
+</tr>
+{% endfor %}

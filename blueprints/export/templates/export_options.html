@@ -1,0 +1,37 @@
+{# export_options.html #}
+{% extends "base.html" %}
+
+{% block title %}Opciones de Exportación{% endblock %}
+
+{% block content %}
+
+
+<div class="container mt-4 p-4 rounded-3 shadow-lg">
+    <header class="text-center mb-4">
+        <h1 class="display-6 fw-bold text-white">Opciones de Exportación / Estadísticas Anuales</h1> {# Añadido text-white si no lo hereda de dark parent #}
+    </header>
+
+    {# Grupo de enlaces con estilos de lista de grupo de Bootstrap #}
+    <div class="list-group">
+        <a href="{{ url_for('export.exportar_todo_xlsx') }}" class="list-group-item list-group-item-action">
+            Exportar TODA LA BASE DE DATOS a Excel
+            <small class="text-muted d-block">Exporta todas las tablas de la base de datos a un único archivo Excel, con cada tabla en una hoja separada.</small>
+        </a>
+        {# Enlace para copia de seguridad #}
+        <a href="{{ url_for('export.copia_seguridad_options') }}" class="list-group-item list-group-item-action">
+            Copia de Seguridad
+            <small class="text-muted d-block">Gestiona la creación y restauración de copias de seguridad de la base de datos.</small>
+        </a>
+        {# Enlace para exportar a PDF #}
+        <a href="{{ url_for('export.exportar_pdf_options') }}" class="list-group-item list-group-item-action">
+            Exportar a PDF
+            <small class="text-muted d-block">Crea un PDF personalizado con libros, campos seleccionados, ordenación y filtros.</small>
+        </a>
+        {# Enlace para ver las estadísticas #}
+        <a href="{{ url_for('export.estadisticas_anuales_trimestrales') }}" class="list-group-item list-group-item-action">
+            Ver Estadísticas
+            <small class="text-muted d-block">Ver estadísticas anuales por trimestre.</small>
+        </a>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,89 @@
+{% extends 'base.html' %}
+
+{% block title %}Editar Usuario: {{ usuario.nombre }} {{ usuario.apellidos }}{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="row justify-content-center">
+        <div class="col-md-7">
+            <header class="text-center mb-4">
+                <h1>Editar Usuario: <span class="fw-bold">{{ usuario.nombre }} {{ usuario.apellidos }}</span></h1>
+            </header>
+            <div class="card mb-4 shadow-sm">
+                <div class="card-header bg-light text-dark fw-bold">
+                    Modificar Detalles del Usuario
+                </div>
+                <div class="card-body">
+                    <form method="POST" action="{{ url_for('users.editar_usuario', user_id=usuario.id) }}">
+                        <input type="hidden" name="next" value="{{ next_url | default('') }}">
+                        <dl class="row mb-0">
+                            {# Número de Socio - NO EDITABLE #}
+                            <dt class="col-sm-4 text-secondary">Número de Socio:</dt>
+                            <dd class="col-sm-8">
+                                <input type="text" class="form-control" value="{{ usuario.id }}" readonly disabled style="background-color: #e9ecef;">
+                            </dd>
+
+                            {# Nombre - Convertir a mayúsculas #}
+                            <dt class="col-sm-4 text-secondary">Nombre (*):</dt>
+                            <dd class="col-sm-8">
+                                <input type="text" class="form-control" id="nombre" name="nombre"
+                                       value="{{ usuario.nombre | default('') }}" required
+                                       oninput="this.value = this.value.toUpperCase()">
+                            </dd>
+
+                            {# Apellidos - Convertir a mayúsculas #}
+                            <dt class="col-sm-4 text-secondary">Apellidos (*):</dt>
+                            <dd class="col-sm-8">
+                                <input type="text" class="form-control" id="apellidos" name="apellidos"
+                                       value="{{ usuario.apellidos | default('') }}" required
+                                       oninput="this.value = this.value.toUpperCase()">
+                            </dd>
+
+                            {# Módulo - Input con Datalist (permitir nuevo y autocompletar) #}
+                            <dt class="col-sm-4 text-secondary">Módulo (*):</dt>
+                            <dd class="col-sm-8">
+                                <input type="text" class="form-control" id="modulo" name="modulo"
+                                       list="modulosList" value="{{ usuario.nombre_modulo | default('') }}" required
+                                       placeholder="Introduce o selecciona un módulo"
+                                       oninput="this.value = this.value.toUpperCase()">
+                                <datalist id="modulosList">
+                                    {% for modulo_item in modulos %}
+                                        <option value="{{ modulo_item.nombre_modulo }}">
+                                    {% endfor %}
+                                </datalist>
+                                <div class="form-text">Si el módulo no existe, se creará automáticamente.</div>
+                            </dd>
+
+                            {# Género - Input con Datalist (Hombre/Mujer/Otro) #}
+                            <dt class="col-sm-4 text-secondary">Género (*):</dt>
+                            <dd class="col-sm-8">
+                                <input type="text" class="form-control" id="genero" name="genero"
+                                       list="generosList" value="{{ usuario.genero | default('') }}" required
+                                       placeholder="Hombre, Mujer u Otro"
+                                       oninput="this.value = this.value.toUpperCase()">
+                                <datalist id="generosList">
+                                    <option value="HOMBRE">
+                                    <option value="MUJER">
+                                    <option value="OTRO">
+                                </datalist>
+                            </dd>
+
+                            {# Observaciones - NO se convierte a mayúsculas #}
+                            <dt class="col-sm-4 text-secondary">Observaciones:</dt>
+                            <dd class="col-sm-8">
+                                <textarea class="form-control" id="observaciones" name="observaciones" rows="5">{{ usuario.observaciones | default('') }}</textarea>
+                                <div class="form-text">Este campo no se convierte a mayúsculas.</div>
+                            </dd>
+                            {# El campo de préstamos activos no se edita aquí, se actualizaría automáticamente con la lógica de préstamos #}
+                        </dl>
+                        <div class="d-flex justify-content-center mt-4">
+                            <button type="submit" class="btn btn-primary me-2">Guardar Cambios</button>
+                            <a href="{{ url_for('users.ver_ficha_usuario', user_id=usuario.id, next=next_url) }}" class="btn btn-secondary">Cancelar</a>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

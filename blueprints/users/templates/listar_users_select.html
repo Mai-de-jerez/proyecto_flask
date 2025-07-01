@@ -1,0 +1,342 @@
+{# listar_users_select.html #}
+{% extends "base.html" %}
+{% block title %}Seleccionar Usuario{% endblock %}
+{% block content %}
+<div class="container-fluid mt-3 mb-5">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <form class="d-flex flex-grow-1" id="search-form-select-user">
+            <input class="form-control me-2 search-input" type="search" placeholder="Buscar usuarios por Núm. Socio, Nombre o Apellidos..." aria-label="Search" name="q" id="search-input-select-user" value="">
+            <button class="btn btn-outline-secondary search-button" type="button" id="show-all-button-select-user">Mostrar todos</button>
+
+            {# --- CONTROL DE ORDENACIÓN (SELECT) --- #}
+            {# Añadimos el select de ordenación, similar a users_list.html #}
+            <select class="form-select ms-2" id="sort-select-select-user" name="sort_by" aria-label="Ordenar por">
+                <option value="">Ordenar por...</option>
+                <option value="id_asc">ID (Asc)</option>
+                <option value="id_desc">ID (Desc)</option>
+                <option value="apellidos_asc">Apellidos (A-Z)</option>
+                <option value="apellidos_desc">Apellidos (Z-A)</option>
+                <option value="nombre_asc">Nombre (A-Z)</option>
+                <option value="nombre_desc">Nombre (Z-A)</option>
+                <option value="modulo_asc">Módulo (A-Z)</option>
+                <option value="modulo_desc">Módulo (Z-A)</option>
+            </select>
+            {# --- FIN CONTROL DE ORDENACIÓN --- #}
+        </form>
+
+        <button type="button" class="btn btn-info ms-2" id="cancelSelectUserBtn"> {# ms-2 para espaciado #}
+            <i class="fas fa-arrow-left"></i> Volver al Formulario de Préstamo
+        </button>
+    </div>
+    <div class="card shadow-sm mb-7">
+        <div class="card-header bg-dark text-white text-center fw-bold fs-5">
+            Usuarios Disponibles
+        </div>
+        <div class="card-body">
+            <div class="table-responsive">
+                <table class="table table-striped table-hover" id="usersTable">
+                    <thead>
+                        <tr>
+                            <th scope="col">Núm. Socio</th>
+                            <th scope="col">Apellidos</th>
+                            <th scope="col">Nombre</th>
+                            <th scope="col">Módulo</th>
+                            <th scope="col">Género</th>
+                            <th scope="col">Préstamos Activos</th>
+                            <th scope="col"></th>
+                        </tr>
+                    </thead>
+                    <tbody id="users-table-body-select" class="small">
+                        {% include '_users_table_rows.html' %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <nav aria-label="Navegación de usuarios" class="mt-4">
+        <ul class="pagination justify-content-center" id="pagination-controls-select-user">
+            {% include '_pagination_controls_users.html' %}
+        </ul>
+    </nav>
+
+    <div class="mt-4 text-center">
+        <button type="button" class="btn btn-success btn-lg" id="selectUserBtn" disabled>
+            <i class="fas fa-check-circle"></i> Seleccionar Usuario
+        </button>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+{{ super() }}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const initialFlaskQuery = "{{ q | default('') }}";
+    const initialFlaskPage = parseInt("{{ page | default(1) }}");
+    const initialFlaskSortBy = "{{ sort_by | default('id') }}";
+    const initialFlaskSortDirection = "{{ sort_direction | default('ASC') }}";
+    const searchInput = document.getElementById('search-input-select-user');
+    const usersTableBody = document.getElementById('users-table-body-select');
+    const paginationControls = document.getElementById('pagination-controls-select-user');
+    const selectUserBtn = document.getElementById('selectUserBtn');
+    const cancelSelectUserBtn = document.getElementById('cancelSelectUserBtn');
+    const showAllButton = document.getElementById('show-all-button-select-user');
+    const searchForm = document.getElementById('search-form-select-user');
+    const sortSelect = document.getElementById('sort-select-select-user');
+
+    // Comprobación de existencia de elementos DOM
+    if (!(searchInput && usersTableBody && paginationControls && selectUserBtn && cancelSelectUserBtn && showAllButton && searchForm && sortSelect)) {
+        console.error("Error: No se encontraron todos los elementos DOM necesarios para listar_users_select.html.");
+        return; // Detener la ejecución si faltan elementos cruciales
+    }
+
+    let selectedUserId = null;
+    let selectedUserName = null;
+    let selectedUserApellidos = null;
+    let activeUserRow = null;
+
+    let debounceTimeout;
+
+    searchInput.value = initialFlaskQuery;
+    updateSortSelect(initialFlaskSortBy, initialFlaskSortDirection);
+
+
+    // --- Función para adjuntar manejadores de clic a las filas ---
+    function attachRowClickHandlers() {
+        // Reinicia el estado de selección global
+        selectedUserId = null;
+        selectedUserName = null;
+        selectedUserApellidos = null;
+        if (activeUserRow) {
+            activeUserRow.classList.remove('table-active');
+            activeUserRow = null;
+        }
+
+        // Deshabilitar y resetear el botón de selección al (re)cargar las filas
+        if (selectUserBtn) {
+            selectUserBtn.disabled = true;
+            selectUserBtn.innerHTML = '<i class="fas fa-check-circle"></i> Seleccionar Usuario';
+            selectUserBtn.classList.remove('btn-secondary');
+            selectUserBtn.classList.add('btn-success');
+        }
+
+        document.querySelectorAll('#users-table-body-select .user-row').forEach(row => {
+            row.removeEventListener('click', handleRowClick); // Asegurar que no se dupliquen listeners
+            row.addEventListener('click', handleRowClick);
+        });
+    }
+
+    // --- Manejador de clic para seleccionar fila ---
+    function handleRowClick(event) {
+        const clickedRow = event.currentTarget;
+        // Evita que el clic en el botón "Ver Ficha" dentro de la fila también seleccione la fila.
+        if (event.target.tagName === 'A' && event.target.classList.contains('btn')) {
+            return;
+        }
+
+        // Si ya hay una fila activa, quitarle el resaltado
+        if (activeUserRow) {
+            activeUserRow.classList.remove('table-active');
+        }
+
+        // Resaltar la fila actual
+        clickedRow.classList.add('table-active');
+        activeUserRow = clickedRow;
+
+        // Capturar datos del usuario (necesitan data-id, data-nombre, data-apellidos en el <tr>)
+        selectedUserId = this.dataset.id;
+        selectedUserName = this.dataset.nombre;
+        selectedUserApellidos = this.dataset.apellidos;
+
+        selectUserBtn.disabled = false;
+        selectUserBtn.innerHTML = `<i class="fas fa-check-circle"></i> Seleccionar: ${selectedUserName} ${selectedUserApellidos}`;
+        selectUserBtn.classList.remove('btn-success');
+        selectUserBtn.classList.add('btn-secondary');
+    }
+
+    // --- Función principal para realizar la búsqueda y paginación vía AJAX ---
+    function performSearch(query, page, sortBy, sortDirection) {
+        clearTimeout(debounceTimeout);
+
+        debounceTimeout = setTimeout(() => {
+            const baseUrl = "{{ url_for('users.listar_users_ajax_select') }}";
+            const urlObj = new URL(baseUrl, window.location.origin);
+            urlObj.searchParams.set('q', query);
+            urlObj.searchParams.set('page', page);
+
+            if (sortBy) {
+                urlObj.searchParams.set('sort_by', sortBy);
+                urlObj.searchParams.set('sort_direction', sortDirection);
+            }
+
+            fetch(urlObj.toString())
+                .then(response => {
+                    if (!response.ok) {
+
+                        const errorText = response.text();
+                        throw new Error(`Error HTTP! Estado: ${response.status} - ${errorText}`);
+                    }
+                    return response.json();
+                })
+                .then(data => {
+                    usersTableBody.innerHTML = data.table_rows;
+                    paginationControls.innerHTML = data.pagination_html;
+                    attachRowClickHandlers();
+                    searchInput.value = query; // Asegura que el input de búsqueda refleja la query
+                    updateSortSelect(sortBy, sortDirection); // Asegura que el select de ordenación refleja el estado
+
+                    // Reinicia la selección después de una nueva búsqueda o paginación
+                    selectedUserId = null;
+                    selectedUserName = null;
+                    selectedUserApellidos = null;
+                    selectUserBtn.disabled = true;
+                    selectUserBtn.innerHTML = '<i class="fas fa-check-circle"></i> Seleccionar Usuario';
+                    selectUserBtn.classList.remove('btn-secondary');
+                    selectUserBtn.classList.add('btn-success');
+                })
+                .catch(error => {
+                    console.error('performSearch (users_select): Error en la petición o procesamiento:', error);
+                    usersTableBody.innerHTML = '<tr><td colspan="7" class="text-center text-danger">Error al cargar usuarios. Revisa la consola para más detalles.</td></tr>';
+                    paginationControls.innerHTML = '';
+                    selectedUserId = null;
+                    selectedUserName = null;
+                    selectedUserApellidos = null;
+                    selectUserBtn.disabled = true;
+                    selectUserBtn.innerHTML = '<i class="fas fa-check-circle"></i> Seleccionar Usuario';
+                    selectUserBtn.classList.remove('btn-secondary');
+                    selectUserBtn.classList.add('btn-success');
+                });
+        }, 300);
+    }
+
+    // --- Event Listeners para búsqueda y paginación ---
+    searchInput.addEventListener('input', function() {
+        const [sortBy, sortDirection] = getSortParamsFromSelect();
+        performSearch(searchInput.value, 1, sortBy, sortDirection);
+    });
+
+    if (searchForm) {
+        searchForm.addEventListener('submit', function(event) {
+            event.preventDefault();
+            const [sortBy, sortDirection] = getSortParamsFromSelect();
+            performSearch(searchInput.value, 1, sortBy, sortDirection);
+        });
+    }
+
+    showAllButton.addEventListener('click', function() {
+        searchInput.value = '';
+        sortSelect.value = ''; // Resetea a la opción vacía "Ordenar por..."
+        const [sortBy, sortDirection] = getSortParamsFromSelect(); // Esto obtendrá 'id' y 'ASC' por defecto
+        performSearch('', 1, sortBy, sortDirection);
+    });
+
+    sortSelect.addEventListener('change', function() {
+        const [sortBy, sortDirection] = getSortParamsFromSelect();
+        performSearch(searchInput.value, 1, sortBy, sortDirection);
+    });
+
+
+    if (paginationControls) {
+        paginationControls.addEventListener('click', function(event) {
+            const pageLink = event.target.closest('a.page-link');
+
+            if (pageLink && !pageLink.parentElement.classList.contains('disabled')) {
+                event.preventDefault();
+                const page = parseInt(pageLink.dataset.page) || 1;
+                const query = pageLink.dataset.q || '';
+                const sortBy = pageLink.dataset.sortBy || '';
+                const sortDirection = pageLink.dataset.sortDirection || '';
+
+                // Actualizar los controles visuales del formulario
+                searchInput.value = query;
+                updateSortSelect(sortBy, sortDirection);
+
+
+                performSearch(query, page, sortBy, sortDirection);
+            }
+        });
+    }
+
+    // --- Event Listener para el botón "Seleccionar Usuario" ---
+    selectUserBtn.addEventListener('click', function() {
+        if (selectedUserId) {
+            const currentUrlParams = new URLSearchParams(window.location.search);
+            const redirectUrl = new URL("{{ url_for('loans.realizar_prestamo', _external=true) }}");
+
+            currentUrlParams.forEach((value, key) => {
+                redirectUrl.searchParams.set(key, value);
+            });
+
+            redirectUrl.searchParams.set('id_usuario_seleccionado', selectedUserId);
+            redirectUrl.searchParams.set('nombre_usuario_seleccionado', selectedUserName);
+            redirectUrl.searchParams.set('apellidos_usuario_seleccionado', selectedUserApellidos);
+
+            window.location.href = redirectUrl.toString();
+        } else {
+            console.warn("No hay usuario seleccionado.");
+        }
+    });
+
+    // --- El botón cancelSelectUserBtn ahora funciona como "Volver al Formulario de Préstamo" ---
+    cancelSelectUserBtn.addEventListener('click', function() {
+        const currentUrlParams = new URLSearchParams(window.location.search);
+
+        const redirectUrl = new URL("{{ url_for('loans.realizar_prestamo', _external=true) }}");
+
+        currentUrlParams.forEach((value, key) => {
+            const isUserSelectionParam = key.startsWith('id_usuario_seleccionado') ||
+                                         key.startsWith('nombre_usuario_seleccionado') ||
+                                         key.startsWith('apellidos_usuario_seleccionado') ||
+                                         key === 'q' ||
+                                         key === 'page' ||
+                                         key === 'sort_by' ||
+                                         key === 'sort_direction';
+
+            if (!isUserSelectionParam) {
+                redirectUrl.searchParams.set(key, value);
+            }
+        });
+        window.location.href = redirectUrl.toString();
+    });
+
+    // --- FUNCIONES AUXILIARES PARA EL SELECT DE ORDENACIÓN (NUEVAS) ---
+    function getSortParamsFromSelect() {
+        const selectedValue = sortSelect.value;
+        let sortBy = '';
+        let sortDirection = '';
+        if (selectedValue) {
+            const parts = selectedValue.split('_');
+            sortDirection = parts[parts.length - 1].toUpperCase();
+            sortBy = parts.slice(0, -1).join('_');
+        } else {
+            // Si el valor es vacío, usar los valores por defecto del backend
+            sortBy = initialFlaskSortBy;
+            sortDirection = initialFlaskSortDirection;
+        }
+        return [sortBy, sortDirection];
+    }
+
+    function updateSortSelect(sortBy, sortDirection) {
+        if (sortSelect) {
+            if (sortBy && sortDirection) {
+                const valueToSelect = `${sortBy}_${sortDirection.toLowerCase()}`;
+                // Solo actualiza si la opción existe
+                if (Array.from(sortSelect.options).some(option => option.value === valueToSelect)) {
+                     sortSelect.value = valueToSelect;
+
+                } else {
+                     sortSelect.value = '';
+                }
+            } else {
+                sortSelect.value = '';
+            }
+        }
+    }
+
+    // --- Carga Inicial ---
+    performSearch(initialFlaskQuery, initialFlaskPage, initialFlaskSortBy, initialFlaskSortDirection);
+    attachRowClickHandlers(); // Llama a esto después de la primera carga AJAX para adjuntar manejadores a las filas
+});
+</script>
+{% endblock %}

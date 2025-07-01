@@ -1,0 +1,96 @@
+{% extends 'base.html' %}
+
+{% block title %}Añadir Nuevo Usuario{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <main>
+        <div class="row justify-content-center">
+            <div class="col-lg-7 col-md-8">
+                <header class="text-center mb-4">
+                    <h1 class="display-5 fw-bold">Añadir Nuevo Usuario</h1>
+                </header>
+                <div class="card shadow-sm mb-4">
+                    <div class="card-header bg-dark text-center text-white">
+                        Datos del Nuevo Usuario
+                    </div>
+                    <div class="card-body">
+                        <form method="post" action="{{ url_for('users.anadir_usuario') }}">
+                                <div class="mb-3">
+                                    <label for="user_id" class="form-label">Número de Socio:</label>
+                                    <input type="number" class="form-control" id="user_id" name="user_id"
+                                           value="{{ request.form.get('user_id', '') }}"
+                                           placeholder="Se asignará automáticamente si se deja vacío"
+                                           min="1">
+                                    <small class="form-text text-muted">Debe no existir ya en la base de datos y ser un número entero.</small>
+                                </div>
+
+                                {# Apellidos #}
+                                <div class="mb-3">
+                                    <label for="apellidos" class="form-label">Apellidos <span class="text-danger">*</span></label>
+                                    <input type="text" class="form-control" id="apellidos" name="apellidos"
+                                           value="{{ request.form.get('apellidos', '') }}"
+                                           placeholder="Introduce los apellidos del usuario" required
+                                           oninput="this.value = this.value.toUpperCase()">
+                                    <small class="form-text text-muted">Obligatorio.</small>
+                                </div>
+
+                                {# Nombre #}
+                                <div class="mb-3">
+                                    <label for="nombre" class="form-label">Nombre <span class="text-danger">*</span></label>
+                                    <input type="text" class="form-control" id="nombre" name="nombre"
+                                           value="{{ request.form.get('nombre', '') }}"
+                                           placeholder="Introduce el nombre del usuario" required
+                                           oninput="this.value = this.value.toUpperCase()">
+                                    <small class="form-text text-muted">Obligatorio.</small>
+                                </div>
+
+                                {# Módulo #}
+                                <div class="mb-3">
+                                    <label for="id_modulo" class="form-label">Módulo <span class="text-danger">*</span></label>
+                                    <input type="text" class="form-control" id="id_modulo" name="id_modulo"
+                                           value="{{ request.form.get('id_modulo', '') }}"
+                                           list="modulos_list"
+                                           placeholder="Selecciona o escribe el módulo" required
+                                           oninput="this.value = this.value.toUpperCase()">
+                                    <datalist id="modulos_list">
+                                        {% for modulo in modulos %}
+                                            <option value="{{ modulo.nombre_modulo }}">
+                                        {% endfor %}
+                                    </datalist>
+                                    <small class="form-text text-muted">Obligatorio.</small>
+                                </div>
+
+                                {# Género #}
+                                <div class="mb-3">
+                                    <label for="genero" class="form-label">Género <span class="text-danger">*</span></label>
+                                    <input type="text" class="form-control" id="genero" name="genero"
+                                           value="{{ request.form.get('genero', '') }}"
+                                           list="generos_list"
+                                           placeholder="Hombre, Mujer u Otro" required
+                                           oninput="this.value = this.value.toUpperCase()">
+                                    <datalist id="generos_list">
+                                        <option value="HOMBRE">
+                                        <option value="MUJER">
+                                        <option value="OTRO">
+                                    </datalist>
+                                    <small class="form-text text-muted">Escoge entre Hombre, Mujer u Otro (Obligatorio).</small>
+                                </div>
+
+                                {# Observaciones #}
+                                <div class="mb-3">
+                                    <label for="observaciones" class="form-label">Observaciones</label>
+                                    <textarea class="form-control" id="observaciones" name="observaciones" rows="3">{{ observaciones | default('') }}</textarea>
+                                </div>
+                                <div class="d-flex justify-content-center mt-4 mb-4">
+                                    <button type="submit" class="btn btn-primary me-2">Añadir Usuario</button>
+                                    <a href="{{ url_for('users.listar_usuarios') }}" class="btn btn-secondary">Cancelar</a>
+                                </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+</div>
+{% endblock %}
