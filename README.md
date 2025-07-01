@@ -3,6 +3,7 @@ Este proyecto es un sistema web integral diseñado para la gestión eficiente de
 
 **¡Estamos inmensamente orgullosos de ver el impacto positivo que tiene este sistema cada día!** La respuesta del personal y los usuarios ha sido excepcional, y están tan contentos que, en un futuro próximo, subiré una carta de agradecimiento oficial que me harán llegar desde la institución. Este proyecto es un testimonio de cómo la tecnología puede servir a propósitos nobles y hacer una diferencia real.
 La utilidad real es que este proyecto no necesita internet, que es un handicup que tienen lugares como una cárcel, entonces pensé que Flask y SQLite eran una buena opción, no es una biblioteca inmensa así que pienso que les puede ir bien.
+Aunque en un futuro no muy lejano volveré a subir este proyecto usando MYSQL, mysql-connector y SQLAlquemy.
 
 ## 🌟 Características Principales
 
