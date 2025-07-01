@@ -161,7 +161,7 @@ python run_server.py
 
 La aplicación se iniciará y se abrirá automáticamente en tu navegador predeterminado en `http://127.0.0.1:5000`.
 
-Nota: La base de datos `_biblioteca.db_` se creará automáticamente en C:/biblioteca_data la primera vez que la aplicación se inicie.
+Nota: La base de datos _biblioteca.db_ se creará automáticamente en _C:/biblioteca_data_ la primera vez que la aplicación se inicie.
 
 
 ## 🖥️ Uso
