@@ -103,71 +103,11 @@ Aunque en un futuro no muy lejano volveré a subir este proyecto usando MYSQL, m
 
    * [Jinja2](https://jinja.palletsprojects.com/en/stable/) (Motor de plantillas de Flask)
 
-## 🚀 Instalación y Puesta en Marcha
-
-Sigue estos pasos para configurar y ejecutar el proyecto en tu entorno local:
-
-1. **Clona el repositorio:**
-
-```
-git clone https://github.com/Mai-de-jerez/proyecto_flask
-cd proyecto_flask
-```
-
-2. **Crea y activa un entorno virtual (muy recomendado):**
-
-```
-python -m venv .venv
-```
-
-### En Windows:
-```
-.\.venv\Scripts\activate
-```
-### En macOS/Linux:
-```
-source ./.venv/bin/activate
-```
-
-3. **Instala las dependencias del proyecto:**
-
-```
-pip install -r requirements.txt
-```
-
-
-4.  **Crea el archivo `.env`:**
-Busca este archivo `.env` con el siguiente contenido en tu IDE:
-
-```
-SECRET_KEY=estaclavelatienesquegenerartucuandolageneresconlasinstruccionesdelreadmecolocalaqui
-```
-**¡Importante!** Debes reemplazar `estaclavelatienesquegenerartucuandolageneresconlasinstruccionesdelreadmecolocalaqui` con una clave secreta real y segura. Puedes generar una ejecutando lo siguiente en tu terminal Python:
-
-```python
-import os
-print(os.urandom(24).hex())
-```
-Copia la cadena de texto generada y pégala en tu archivo `.env`.
-
-
-
-5. **Ejecuta la aplicación Flask:**
-
-Tu aplicación se inicia a través del script `run_server.py`, que utiliza Waitress como servidor de producción embebido. Este script también se encarga de inicializar la base de datos si es la primera vez que se ejecuta y de abrir automáticamente el navegador.
-   
-```
-python run_server.py
-```
-
-La aplicación se iniciará y se abrirá automáticamente en tu navegador predeterminado en `http://127.0.0.1:5000`.
-
-Nota: La base de datos _biblioteca.db_ se creará automáticamente en _C:/biblioteca_data_ la primera vez que la aplicación se inicie.
 
 
 ## 🖥️ Uso
 
-* Una vez que la aplicación esté funcionando:
+* Una vez que la aplicación está funcionando hace estas cosas:
 
 * **Página Principal:** Accede a la interfaz inicial de la biblioteca.
 
