@@ -238,25 +238,10 @@ tu_proyecto_biblioteca/
 
 ```
 
-## 🤝 Contribución
-
-¡Todas las contribuciones son bienvenidas! Si deseas mejorar este proyecto o añadir nuevas funcionalidades, por favor:
-
-1. Haz un "fork" de este repositorio.
-
-2. Crea una nueva rama `(git checkout -b feature/nombre-de-la-feature)`.
-
-3. Realiza tus cambios.
-
-4. Haz "commit" de tus cambios `(git commit -m 'feat: Descripción breve de la funcionalidad')`.
-
-5. Sube tu rama `(git push origin feature/nombre-de-la-feature)`.
-
-6. Abre una "Pull Request" explicando tus cambios.
-
 ## 📄 Licencia
 
-Este proyecto está bajo la Licencia MIT. Consulta el archivo `LICENSE` en el repositorio para más detalles.
+Este proyecto no está licenciado para uso, copia, distribución ni modificación.
+No está permitido el uso comercial ni personal sin autorización expresa.
 
 ## 📧 Contacto
 
