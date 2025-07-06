@@ -178,13 +178,13 @@ tu_proyecto_biblioteca/
 
 ```
 
-## 📄 Licencia
+## ⚠️ Licencia
 
-Este proyecto no está licenciado para uso, copia, distribución ni modificación.  
+Este proyecto **no está licenciado para uso público**.
 
-No está permitido el uso comercial ni personal sin autorización expresa.  
-
-Todos los derechos reservados © 2025 María del Carmen Martín Rodríguez.
+Todo el contenido de este repositorio está protegido por derechos de autor.  
+No se permite su uso, copia, modificación ni distribución sin autorización expresa.  
+**Todos los derechos reservados © 2025 María del Carmen Martín Rodríguez**.
 
 ## 📧 Contacto
 
