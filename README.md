@@ -1,9 +1,9 @@
 ## Sistema de Gestión de Biblioteca (talegoTK_Flask)
 Este proyecto es un sistema web integral diseñado para la gestión eficiente de una biblioteca, desarrollado con Python, Flask y sqlite3. Su propósito va más allá de la mera administración: **actualmente, está siendo utilizado con gran éxito en el centro penitenciario donde trabaja mi pareja, transformando y optimizando la gestión de su biblioteca y acercando la lectura a quienes más lo necesitan.**
 
-**¡Estamos inmensamente orgullosos de ver el impacto positivo que tiene este sistema cada día!** La respuesta del personal y los usuarios ha sido excepcional, y están tan contentos que, en un futuro próximo, subiré una carta de agradecimiento oficial que me harán llegar desde la institución. Este proyecto es un testimonio de cómo la tecnología puede servir a propósitos nobles y hacer una diferencia real.
+**¡Estamos inmensamente orgullosos de ver el impacto positivo que tiene este sistema cada día!** La respuesta del personal y los usuarios ha sido excepcional, y están tan contentos que adjunto una carta de agradecimiento oficial que me dieron desde la institución. Este proyecto es un testimonio de cómo la tecnología puede servir a propósitos nobles y hacer una diferencia real.
 La utilidad real es que este proyecto no necesita internet, que es un handicup que tienen lugares como una cárcel, entonces pensé que Flask y SQLite eran una buena opción, no es una biblioteca inmensa así que pienso que les puede ir bien.
-Aunque en un futuro no muy lejano volveré a subir este proyecto usando MYSQL, mysql-connector y SQLAlquemy.
+Aunque en un futuro no muy lejano volveré a subir este proyecto usando como babse de datos MYSQL.
 
 ## 🌟 Características Principales
 
